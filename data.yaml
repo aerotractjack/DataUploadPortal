@@ -1,0 +1,39 @@
+kml:
+  desc: "KML file for making flight plans"
+  type: "file"
+
+flight_plan:
+  desc: "UgCS/other flight plan file"
+  type: "file"
+
+site_shapefile:
+  desc: "Shapefile/zipfile of GIS files for individual site"
+  type: "file"
+
+flight_images:
+  desc: "Source images from flight"
+  type: "dir"
+
+flight_lidar: 
+  desc: "Source LiDAR readings from flight"
+  type: "dir"
+
+max_res_ortho:
+  desc: "Maximum resolution orthomosaic TIFF"
+  type: "file"
+
+low_res_ortho:
+  desc: "Low resolution orthomosaic TIFF"
+  type: "file"
+
+training_data_and_boundary:
+  desc: "Set of training AOI and points for ML"
+  type: "file"
+
+ai_results_file:
+  desc: "Cleaned and QC'd AI results file"
+  type: "file"
+
+heatmap:
+  desc: "Cleaned and QC'd heatmap deliverable"
+  type: "file"
