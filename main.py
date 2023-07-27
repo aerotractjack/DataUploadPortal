@@ -2,9 +2,10 @@ import sys
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, \
     QComboBox, QPushButton, QFileDialog, QDialog, QTextEdit, QMessageBox
 from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QDialogButtonBox
-
 import json
 import yaml
+
+data_path = "/home/aerotract/software/DataUploadPortal/data.yaml"
 
 dropdown_titles = [
     "client",
@@ -34,7 +35,7 @@ class SelectionMenu(QWidget):
     def __init__(self):
         super().__init__()
         self.data = {}
-        with open("data.yaml", "r") as fp:
+        with open(data_path, "r") as fp:
             self.data = yaml.safe_load(fp)
         self.init_ui()
         self.selected_filetype = None
@@ -45,9 +46,6 @@ class SelectionMenu(QWidget):
         self.setWindowTitle("Select an Option")
         self.resize(600, 400)  # Larger window size
         layout = QVBoxLayout(self)
-
-        # with open("data.yaml", "r") as fp:
-        #     self.data = yaml.safe_load(fp)
 
         label = QLabel("Choose one option:")
         label.setStyleSheet("font-size: 24px")  # Larger font size
