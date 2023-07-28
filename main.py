@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, \
 from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QDialogButtonBox
 import json
 import yaml
+from db_integration import get_dropdown_data
 
 data_path = "/home/aerotract/software/DataUploadPortal/data.yaml"
 
@@ -13,11 +14,7 @@ dropdown_titles = [
     "stand"
 ]
 
-dropdown_data = [
-    ["a", "b"],
-    {"a": ["1", "2"], "b": ["2", "3"]},
-    {"1": ["m", "n"], "2": ["n", "o"], "3": ["o", "p"], "4": ["p", "q"]}
-]
+dropdown_data = get_dropdown_data()
 
 class ReportDialog(QDialog):
     def __init__(self, report_data):
