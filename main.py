@@ -4,18 +4,27 @@ from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, \
 from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QDialogButtonBox
 import json
 import yaml
-from db_integration import get_dropdown_data
+import requests
+import pandas as pd 
 
-data_path = "/home/aerotract/software/DataUploadPortal/data.yaml"
+data_path = "/home/aerotract/software/DataUploadPortal/files/filetypes.yaml"
 
-dropdown_titles = [
-    "client",
-    "project",
-    "stand"
-]
-
-dropdown_data = get_dropdown_data()
-print(json.dumps(dropdown_data, indent=4))
+def get_dropdown_data():
+    # use the DB API to get our clients, projects, and sites
+    url = "http://127.0.0.1:5055/api/project_and_stand_ids"
+    req = requests.post(url)
+    data = pd.DataFrame(req.json())
+    cids = data["CLIENT_ID"].sort_values().unique().tolist()
+    pid_map = {}
+    for cid in cids:
+        pids = data[data["CLIENT_ID"] == cid]["PROJECT_ID"]
+        pid_map[cid] = pids.sort_values().unique().tolist()
+    sid_map = {}
+    for pid in data["PROJECT_ID"].sort_values().unique().tolist():
+        sids = data[data["PROJECT_ID"] == pid][["STAND_ID", "STAND_PERSISTENT_ID"]]
+        sids = sids.to_dict("records")
+        sid_map[pid] = sids
+    return [cids, pid_map, sid_map]
 
 class ReportDialog(QDialog):
     def __init__(self, report_data):
@@ -35,10 +44,16 @@ class SelectionMenu(QWidget):
         self.data = {}
         with open(data_path, "r") as fp:
             self.data = yaml.safe_load(fp)
-        self.init_ui()
         self.selected_filetype = None
         self.is_file = None
         self.file_path = None
+        self.dropdown_titles = [
+            "client",
+            "project",
+            "stand"
+        ]
+        self.dropdown_data = get_dropdown_data()
+        self.init_ui()
 
     def init_ui(self):
         self.setWindowTitle("Select an Option")
@@ -61,8 +76,8 @@ class SelectionMenu(QWidget):
         layout.addWidget(self.description_label)
 
         self.subsequent_dropdowns = []  # Store the dynamically created dropdowns
-        for i in range(len(dropdown_data)):
-            dropdown_title = QLabel(dropdown_titles[i] + ":")
+        for i in range(len(self.dropdown_data)):
+            dropdown_title = QLabel(self.dropdown_titles[i] + ":")
             dropdown_title.setStyleSheet("font-size: 24px; font-weight: bold")  # Larger font size and bold
             layout.addWidget(dropdown_title)
             dropdown = QComboBox()
@@ -74,7 +89,7 @@ class SelectionMenu(QWidget):
         self.combo_box.activated.connect(self.show_file_or_dir)
         self.subsequent_dropdowns[0][1].currentIndexChanged.connect(lambda: self.update_dropdown_options(1))
         self.subsequent_dropdowns[1][1].currentIndexChanged.connect(lambda: self.update_dropdown_options(2))
-        self.subsequent_dropdowns[0][1].addItems([str(x) for x in dropdown_data[0]])
+        self.subsequent_dropdowns[0][1].addItems([str(x) for x in self.dropdown_data[0]])
                 
         self.file_button = QPushButton("Select a File")
         self.file_button.clicked.connect(self.open_file_dialog)
@@ -119,7 +134,7 @@ class SelectionMenu(QWidget):
         if selected_option_value_0 is None or len(selected_option_value_0) == 0:
             return
         self.subsequent_dropdowns[index][1].clear()
-        opts = dropdown_data[index].get(int(selected_option_value_0), [])
+        opts = self.dropdown_data[index].get(int(selected_option_value_0), [])
         opts = [str(x) for x in opts]
         self.subsequent_dropdowns[index][1].addItems(opts)
    
@@ -193,7 +208,9 @@ class SelectionMenu(QWidget):
         for i, (_, dropdown) in enumerate(self.subsequent_dropdowns):
             sel_idx = dropdown.currentIndex()
             sel = dropdown.itemText(sel_idx)
-            out[dropdown_titles[i]] = sel
+            if i == 2:
+                sel = json.loads(sel.replace("'", "\""))
+            out[self.dropdown_titles[i]] = sel
         return out
 
     def reset_state(self):
@@ -208,8 +225,6 @@ class SelectionMenu(QWidget):
         self.selected_filetype = None
 
     def handle_confirmed(self, report):
-        print(report)
-        print("confirmed")
         self.reset_state()
 
     def handle_denied(self, report):
