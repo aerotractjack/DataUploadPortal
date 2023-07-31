@@ -114,11 +114,12 @@ class SelectionMenu(QWidget):
         self.selected_filetype = selected_option
 
     def update_dropdown_options(self, index):
-        print("UPDATE ", index)
         selected_option_index_0 = self.subsequent_dropdowns[index-1][1].currentIndex()
         selected_option_value_0 = self.subsequent_dropdowns[index-1][1].itemText(selected_option_index_0)
+        if selected_option_value_0 is None or len(selected_option_value_0) == 0:
+            return
         self.subsequent_dropdowns[index][1].clear()
-        opts = dropdown_data[index].get(selected_option_value_0, [])
+        opts = dropdown_data[index].get(int(selected_option_value_0), [])
         opts = [str(x) for x in opts]
         self.subsequent_dropdowns[index][1].addItems(opts)
    
