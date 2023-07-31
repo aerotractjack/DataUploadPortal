@@ -15,6 +15,7 @@ dropdown_titles = [
 ]
 
 dropdown_data = get_dropdown_data()
+print(json.dumps(dropdown_data, indent=4))
 
 class ReportDialog(QDialog):
     def __init__(self, report_data):
@@ -73,7 +74,7 @@ class SelectionMenu(QWidget):
         self.combo_box.activated.connect(self.show_file_or_dir)
         self.subsequent_dropdowns[0][1].currentIndexChanged.connect(lambda: self.update_dropdown_options(1))
         self.subsequent_dropdowns[1][1].currentIndexChanged.connect(lambda: self.update_dropdown_options(2))
-        self.subsequent_dropdowns[0][1].addItems(dropdown_data[0])
+        self.subsequent_dropdowns[0][1].addItems([str(x) for x in dropdown_data[0]])
                 
         self.file_button = QPushButton("Select a File")
         self.file_button.clicked.connect(self.open_file_dialog)
@@ -113,10 +114,13 @@ class SelectionMenu(QWidget):
         self.selected_filetype = selected_option
 
     def update_dropdown_options(self, index):
+        print("UPDATE ", index)
         selected_option_index_0 = self.subsequent_dropdowns[index-1][1].currentIndex()
         selected_option_value_0 = self.subsequent_dropdowns[index-1][1].itemText(selected_option_index_0)
         self.subsequent_dropdowns[index][1].clear()
-        self.subsequent_dropdowns[index][1].addItems(dropdown_data[index].get(selected_option_value_0, []))
+        opts = dropdown_data[index].get(selected_option_value_0, [])
+        opts = [str(x) for x in opts]
+        self.subsequent_dropdowns[index][1].addItems(opts)
    
     def open_file_dialog(self):
         file_dialog = QFileDialog.getOpenFileName(self, "Select a file")
