@@ -6,6 +6,9 @@ import json
 import yaml
 import requests
 import pandas as pd 
+import sys
+sys.path.append("/home/aerotract/software/StorageManager")
+import StoragePaths
 
 data_path = "/home/aerotract/software/DataUploadPortal/files/filetypes.yaml"
 
@@ -25,6 +28,9 @@ def get_dropdown_data():
         sids = sids.to_dict("records")
         sid_map[pid] = sids
     return [cids, pid_map, sid_map]
+
+def submit_upload_request(report):
+    
 
 class ReportDialog(QDialog):
     def __init__(self, report_data):
