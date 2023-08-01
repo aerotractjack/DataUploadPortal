@@ -29,9 +29,6 @@ def get_dropdown_data():
         sid_map[pid] = sids
     return [cids, pid_map, sid_map]
 
-def submit_upload_request(report):
-    
-
 class ReportDialog(QDialog):
     def __init__(self, report_data):
         super().__init__()
@@ -54,9 +51,9 @@ class SelectionMenu(QWidget):
         self.is_file = None
         self.file_path = None
         self.dropdown_titles = [
-            "client",
-            "project",
-            "stand"
+            "CLIENT_ID",
+            "PROJECT_ID",
+            "STAND_ID"
         ]
         self.dropdown_data = get_dropdown_data()
         self.init_ui()
@@ -216,7 +213,9 @@ class SelectionMenu(QWidget):
             sel = dropdown.itemText(sel_idx)
             if i == 2:
                 sel = json.loads(sel.replace("'", "\""))
-            out[self.dropdown_titles[i]] = sel
+                out.update({k: str(v) for k,v in sel.items()})
+            else:
+                out[self.dropdown_titles[i]] = str(sel)
         return out
 
     def reset_state(self):
@@ -231,6 +230,8 @@ class SelectionMenu(QWidget):
         self.selected_filetype = None
 
     def handle_confirmed(self, report):
+        req = StoragePaths.submit_upload_request(report)
+        print(req)
         self.reset_state()
 
     def handle_denied(self, report):
