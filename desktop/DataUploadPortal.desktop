@@ -1,0 +1,7 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Data Upload Portal QTApp
+Icon=/home/aerotract/software/DataUploadPortal/desktop/DataUploadPortal.icon
+Exec=/usr/bin/python3 /home/aerotract/software/DataUploadPortal/main.py
+Terminal=False
