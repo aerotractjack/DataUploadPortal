@@ -147,14 +147,17 @@ class App(QWizard):
         if len(names) == 0:
             names = [selection]
         files = []
+        types = self.FiletypeSelectionStep1.get_filetype_entry().get("type")
+        types = [types] is not isinstance(types, list) else types
         for idx, label in enumerate(self.FileSelectionStep3.file_labels):
-            local_path = label.text() # Get the selected file path from the label
+            local_path = label.text()
             if not local_path:
                 continue
             files.append(local_path) 
         out = {
             "names": names,
-            "files": files
+            "files": files,
+            "type": types
         }
         return out
 
