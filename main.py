@@ -148,7 +148,7 @@ class App(QWizard):
             names = [selection]
         files = []
         types = self.FiletypeSelectionStep1.get_filetype_entry().get("type")
-        types = [types] is not isinstance(types, list) else types
+        types = [types] if not isinstance(types, list) else types
         for idx, label in enumerate(self.FileSelectionStep3.file_labels):
             local_path = label.text()
             if not local_path:
