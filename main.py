@@ -4,6 +4,7 @@ import json
 import integration
 
 class FiletypeSelectionStep1(QWizardPage):
+    
     def __init__(self):
         super().__init__()
         self.layout = QVBoxLayout()
@@ -119,6 +120,7 @@ class FileSelectionStep3(QWizardPage):
             self.file_labels[idx].setText(selected_path)
 
 class App(QWizard):
+
     def __init__(self):
         super().__init__()
         self.FiletypeSelectionStep1 = FiletypeSelectionStep1()
