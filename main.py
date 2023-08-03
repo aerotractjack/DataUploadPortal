@@ -112,12 +112,19 @@ class FileSelectionStep3(QWizardPage):
         file_dialog = QFileDialog()
         if type_ == "file":
             file_dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
-        elif type_ == "dir":
+            if file_dialog.exec():
+                selected_paths = file_dialog.selectedFiles()
+                self.file_labels[idx].setText('; '.join(selected_paths))
+        elif type_ == "folder":
             file_dialog.setFileMode(QFileDialog.FileMode.Directory)
             file_dialog.setOption(QFileDialog.Option.ShowDirsOnly, True)
-        if file_dialog.exec():
-            selected_path = file_dialog.selectedFiles()[0]  
-            self.file_labels[idx].setText(selected_path)
+            if file_dialog.exec():
+                selected_path = file_dialog.selectedFiles()[0]
+                current_text = self.file_labels[idx].text()
+                if current_text:
+                    self.file_labels[idx].setText(current_text + '; ' + selected_path)
+                else:
+                    self.file_labels[idx].setText(selected_path)
 
 class App(QWizard):
 
@@ -152,10 +159,8 @@ class App(QWizard):
         types = self.FiletypeSelectionStep1.get_filetype_entry().get("type")
         types = [types] if not isinstance(types, list) else types
         for idx, label in enumerate(self.FileSelectionStep3.file_labels):
-            local_path = label.text()
-            if not local_path:
-                continue
-            files.append(local_path) 
+            local_paths = label.text().split('; ')  
+            files.append(local_paths)  
         out = {
             "names": names,
             "files": files,
@@ -169,6 +174,7 @@ class App(QWizard):
             **self.collect_file_uploads()
         }
         print(json.dumps(report, indent=4))
+        return report
     
     def on_reject(self):
         sys.exit(1)
