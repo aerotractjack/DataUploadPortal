@@ -1,7 +1,12 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QWizard, QHBoxLayout, QVBoxLayout, QComboBox, QLabel, QPushButton, QFileDialog, QWizardPage
+from PyQt6.QtWidgets import (QApplication, QWizard, QHBoxLayout, QVBoxLayout, 
+                    QComboBox, QLabel, QPushButton, QFileDialog, QWizardPage)
 import json
 import integration
+import persistqueue
+from persistqueue.serializers import json as pq_json
+
+uploadQ = persistqueue.Queue('/home/aerotract/.DataUploadPortalQueue/pq', serializer=pq_json)
 
 class FiletypeSelectionStep1(QWizardPage):
     
@@ -173,7 +178,9 @@ class App(QWizard):
             **self.collect_selections(),
             **self.collect_file_uploads()
         }
-        print(json.dumps(report, indent=4))
+        reportstr = json.dumps(report, indent=4)
+        print(reportstr)
+        uploadQ.put(reportstr)
         return report
     
     def on_reject(self):
