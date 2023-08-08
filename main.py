@@ -5,8 +5,10 @@ import json
 import integration
 import persistqueue
 from persistqueue.serializers import json as pq_json
+from dotenv import load_dotenv
+load_dotenv("/home/aerotract/software/db_env.sh")
 
-uploadQ = persistqueue.Queue('/home/aerotract/.DataUploadPortalQueue/pq', serializer=pq_json)
+uploadQ = persistqueue.Queue(os.getenv("STORAGE_QUEUE_PATH"), serializer=pq_json)
 
 class FiletypeSelectionStep1(QWizardPage):
     
