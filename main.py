@@ -5,6 +5,7 @@ import json
 import integration
 import persistqueue
 from persistqueue.serializers import json as pq_json
+import os
 from dotenv import load_dotenv
 load_dotenv("/home/aerotract/software/db_env.sh")
 
