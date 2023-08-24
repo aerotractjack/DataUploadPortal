@@ -4,7 +4,7 @@ import requests
 
 def get_dropdown_data():
     # use the DB API to get our clients, projects, and sites
-    url = "http://127.0.0.1:5055/api/project_and_stand_ids"
+    url = "http://192.168.1.35:5055/api/project_and_stand_ids"
     req = requests.post(url)
     data = pd.DataFrame(req.json())
     cids = data["CLIENT_ID"].sort_values().unique().tolist()
@@ -20,6 +20,7 @@ def get_dropdown_data():
     return [[str(_) for _ in cids], pid_map, sid_map]
 
 def get_filetypes():
-    url = "http://127.0.0.1:5055/api/get_filetypes"
+    url = "http://192.168.1.35:5055/api/get_filetypes"
+    print(url)
     req = requests.post(url)
     return req.json()
