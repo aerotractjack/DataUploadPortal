@@ -7,6 +7,7 @@ import persistqueue
 from persistqueue.serializers import json as pq_json
 import os
 import platform
+from Pathlib import Path
 from dotenv import load_dotenv
 
 platform_name = platform.system()
@@ -16,7 +17,9 @@ if platform_name == "Linux":
     sq_path = os.getenv("STORAGE_QUEUE_PATH")
 else:
     load_dotenv("Z:\\software\\db_env.sh")
+    base = Path(os.expanduser("~"))
     sq_path = os.getenv("STORAGE_QUEUE_WINDOWS_PATH")
+    sq_path = base / sq_path
 
 uploadQ = persistqueue.Queue(sq_path, autosave=True, serializer=pq_json)
 
