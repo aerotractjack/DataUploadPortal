@@ -17,7 +17,7 @@ if platform_name == "Linux":
     sq_path = os.getenv("STORAGE_QUEUE_PATH")
 else:
     load_dotenv("Z:\\software\\db_env.sh")
-    base = Path(os.expanduser("~"))
+    base = Path(os.path.expanduser("~"))
     sq_path = os.getenv("STORAGE_QUEUE_WINDOWS_PATH")
     sq_path = base / sq_path
 
