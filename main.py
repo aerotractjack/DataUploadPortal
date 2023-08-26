@@ -7,7 +7,7 @@ import persistqueue
 from persistqueue.serializers import json as pq_json
 import os
 import platform
-from Pathlib import Path
+from pathlib import Path
 from dotenv import load_dotenv
 
 platform_name = platform.system()
