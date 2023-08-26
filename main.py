@@ -6,10 +6,18 @@ import integration
 import persistqueue
 from persistqueue.serializers import json as pq_json
 import os
+import platform
 from dotenv import load_dotenv
 load_dotenv("/home/aerotract/software/db_env.sh")
 
-uploadQ = persistqueue.Queue(os.getenv("STORAGE_QUEUE_PATH"), autosave=True, serializer=pq_json)
+platform_name = platform.system()
+
+if platform_name == "Linux":
+    sq_path = os.getenv("STORAGE_QUEUE_PATH")
+else:
+    sq_path = os.getenv("STORAGE_QUEUE_WINDOWS_PATH")
+
+uploadQ = persistqueue.Queue(sq_path, autosave=True, serializer=pq_json)
 
 class FiletypeSelectionStep1(QWizardPage):
     

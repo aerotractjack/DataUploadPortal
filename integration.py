@@ -21,6 +21,5 @@ def get_dropdown_data():
 
 def get_filetypes():
     url = "http://192.168.1.35:5055/api/get_filetypes"
-    print(url)
     req = requests.post(url)
     return req.json()
