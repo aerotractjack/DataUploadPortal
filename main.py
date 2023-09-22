@@ -22,8 +22,6 @@ else:
     sq_path = os.getenv("STORAGE_QUEUE_WINDOWS_PATH")
     sq_path = base / sq_path
 
-sq_path = "test"
-
 uploadQ = persistqueue.Queue(sq_path, autosave=True, serializer=pq_json)
 
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QComboBox, QListWidget, QLabel
@@ -169,7 +167,6 @@ class App(QWizard):
             stand_id = stand.split(":")[0]
             stand_p_id = stand.split(",")[-1].strip()
             stand_files = files[stand]
-            print(client_id, project_id, stand_id, stand_p_id, stand_files)
             entry = {
                 "filetype": filetype,
                 "CLIENT_ID": client_id, 
