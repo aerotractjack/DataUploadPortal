@@ -9,6 +9,7 @@ import os
 import platform
 from pathlib import Path
 from dotenv import load_dotenv
+from functools import partial
 
 platform_name = platform.system()
 
@@ -21,190 +22,170 @@ else:
     sq_path = os.getenv("STORAGE_QUEUE_WINDOWS_PATH")
     sq_path = base / sq_path
 
+sq_path = "test"
+
 uploadQ = persistqueue.Queue(sq_path, autosave=True, serializer=pq_json)
 
-class FiletypeSelectionStep1(QWizardPage):
-    
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QComboBox, QListWidget, QLabel
+
+class SelectionPage(QWizardPage):
+
     def __init__(self):
         super().__init__()
-        self.layout = QVBoxLayout()
-        self.title_label = QLabel("Select an Option")
-        self.layout.addWidget(self.title_label)
         self.filetypes = integration.get_filetypes()
-        self.filetype_selection_menu = QComboBox()
-        self.filetype_selection_menu.addItems(["Please select a filetype", *[k for k in self.filetypes.keys()]])
-        self.layout.addWidget(self.filetype_selection_menu)
-        self.description_label = QLabel()  # Label to display the description
-        self.layout.addWidget(self.description_label)
-        self.setLayout(self.layout)
-        self.filetype_selection_menu.currentIndexChanged.connect(self.show_description)  # Connect to the method
+        self.init_ui()
+        self.setTitle("Select Data")
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+        self.registerField("filetype*", self.file_dropdown)
+        self.registerField("client*", self.client_dropdown)
+        self.registerField("project*", self.project_dropdown)
 
-    def get_filetype_selection(self):
-        return self.filetype_selection_menu.currentText()
-    
-    def get_filetype_entry(self):
-        return self.filetypes[self.get_filetype_selection()]
-    
-    def show_description(self):
-        desc = self.filetypes.get(self.get_filetype_selection(), {}).get("desc", "")
-        self.description_label.setText(desc) 
+    def init_ui(self):
+        self.setWindowTitle("PyQt6 Dropdowns")
 
-class CompanyDataSelectionStep2(QWizardPage):
+        layout = QVBoxLayout()
 
-    def __init__(self):
-        super().__init__()
-        self.dropdown_data = integration.get_dropdown_data()
-        self.layout = QVBoxLayout()
-        self.dropdown_titles = ["Select a CLIENT", "Select a PROJECT", "Select a STAND"]
-        self.dropdowns = [QComboBox() for _ in range(len(self.dropdown_data))]
-        self.setLayout(self.layout)
+        self.file_dropdown = QComboBox(self)
+        self.file_dropdown.currentIndexChanged.connect(self.populate_client_dropdown)
+        layout.addWidget(QLabel("Filetype"))
+        layout.addWidget(self.file_dropdown)
+
+        self.client_dropdown = QComboBox(self)
+        self.client_dropdown.currentIndexChanged.connect(self.populate_project_dropdown)
+        layout.addWidget(QLabel("Client"))
+        layout.addWidget(self.client_dropdown)
+
+        self.project_dropdown = QComboBox(self)
+        self.project_dropdown.currentIndexChanged.connect(self.populate_stand_list)
+        layout.addWidget(QLabel("Project"))
+        layout.addWidget(self.project_dropdown)
+
+        self.stand_selection = QListWidget(self)
+        self.stand_selection.setSelectionMode(QListWidget.SelectionMode.MultiSelection)
+        layout.addWidget(QLabel("Stand(s)"))
+        layout.addWidget(self.stand_selection)
+
+        self.setLayout(layout)
+        self.populate_initial_data()
+
+    def populate_initial_data(self):
+        self.file_dropdown.addItem("Please select a filetype")
+        self.file_dropdown.addItems(self.filetypes.keys())
+        self.populate_client_dropdown()
+
+    def populate_client_dropdown(self):
+        self.client_dropdown.clear()
+        clients = integration.get_clients()
+        c = [f"{client['CLIENT_ID']}: {client['CLIENT_NAME']}" for client in clients]
+        self.client_dropdown.addItems(c)
+
+    def populate_project_dropdown(self):
+        self.project_dropdown.clear()
+        client_sel = self.client_dropdown.currentText()
+        client_id = client_sel.split(":")[0]
+        projects = integration.get_projects(client_id)
+        p = [f"{project['PROJECT_ID']}: {project['PROJECT_NAME']}" for project in projects]
+        self.project_dropdown.addItems(p)
+
+    def populate_stand_list(self):
+        project_sel = self.project_dropdown.currentText()
+        project_id = project_sel.split(":")[0]
+        stands = integration.get_stands(project_id)
+        s = [f"{stand['STAND_ID']}: {stand['STAND_NAME']}, {stand['STAND_PERSISTENT_ID']}" for stand in stands]
+        self.stand_selection.addItems(s)
+
+class ReviewPage(QWizardPage):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setTitle("Review Selections")
+        layout = QVBoxLayout(self)
+        self.filetype_label = QLabel(self)
+        self.client_label = QLabel(self)
+        self.project_label = QLabel(self)
+        layout.addWidget(self.filetype_label)
+        layout.addWidget(self.client_label)
+        layout.addWidget(self.project_label)
+        self.stand_file_layouts = QVBoxLayout()
+        layout.addLayout(self.stand_file_layouts)
+        self.selected_files = {}  # To store selected file paths
+        self.stand_labels = {}  # To keep a reference to QLabel for each stand
+        self.setLayout(layout)
+        self.stand_files = {}
+
+    def get_selections(self):
+        filetype = self.wizard().page(0).file_dropdown.currentText()
+        client = self.wizard().page(0).client_dropdown.currentText()
+        project = self.wizard().page(0).project_dropdown.currentText()
+        
+        # Access the previous page and its stand_selection directly
+        selection_page = self.wizard().page(0)  # Assuming SelectionPage is the first page added to the wizard
+        stands = [item.text() for item in selection_page.stand_selection.selectedItems()]
+        return filetype, client, project, stands
 
     def initializePage(self):
-        opts0 = self.dropdown_data[0]
-        opts0.insert(0, "Please select a client")
-        self.dropdowns[0].addItems(opts0)
-        for i in range(len(self.dropdowns)):
-            dropdown_title = QLabel()
-            dropdown_title.setText(self.dropdown_titles[i])
-            self.layout.addWidget(dropdown_title)
-            self.layout.addWidget(self.dropdowns[i])
-            if i == len(self.dropdowns) - 1:
-                continue
-            self.dropdowns[i].currentIndexChanged.connect(self.update_dropdown(i+1))
+        # Directly get the current text from the QComboBox widgets
+        filetype, client, project, stands = self.get_selections()
+        self.filetype_label.setText(f"Filetype: {filetype}")
+        self.client_label.setText(f"Client: {client}")
+        self.project_label.setText(f"Project: {project}")
+        for stand in stands:
+            stand_layout = QHBoxLayout()
+            stand_label = QLabel(stand, self)
+            self.stand_labels[stand] = stand_label
+            select_file_btn = QPushButton("Select File", self)
+            select_file_btn.clicked.connect(partial(self.select_file_for_stand, stand))
+            stand_layout.addWidget(stand_label)
+            stand_layout.addWidget(select_file_btn)
+            self.stand_file_layouts.addLayout(stand_layout)
 
-    def update_dropdown(self, idx):
-        def _update_dropdown():
-            selection = self.dropdowns[idx-1].currentText()
-            if selection is None or len(selection) == 0:
-                return
-            self.dropdowns[idx].clear()
-            self.dropdowns[idx].addItems(self.dropdown_data[idx][selection])
-        return _update_dropdown
+    def select_file_for_stand(self, stand):
+        file_path, _ = QFileDialog.getOpenFileName(self, f"Select File for {stand}")
+        if file_path:
+            filename = file_path
+            files = self.selected_files.get(stand, [])
+            files.append(filename)
+            self.selected_files[stand] = files
 
-class FileSelectionStep3(QWizardPage):
-
-    def __init__(self):
-        super().__init__()
-        self.layout = QVBoxLayout()
-        self.title_label = QLabel("Previous Selections")
-        self.layout.addWidget(self.title_label)
-        self.selection_label = QLabel()
-        self.layout.addWidget(self.selection_label)
-        self.file_labels = []
-        self.file_upload_labels = []
-        self.file_upload_buttons = []
-        self.hlayouts = []
-        self.setLayout(self.layout)
-
-    def initializePage(self):
-        selections = self.wizard().collect_selections()
-        for hlayout in self.hlayouts:
-            while hlayout.count():
-                widget = hlayout.takeAt(0).widget()
-                if widget is not None:
-                    widget.deleteLater()
-            self.layout.removeItem(hlayout)
-        self.hlayouts.clear()
-        self.file_labels.clear()
-        self.selection_label.setText(f"Selections: {json.dumps(selections, indent=4)}")
-        self.show_file_selections()
-
-    def show_file_selections(self):
-        filetypes = self.wizard().FiletypeSelectionStep1.filetypes
-        ft_selection = self.wizard().FiletypeSelectionStep1.get_filetype_selection()
-        types = filetypes[ft_selection]["type"]
-        if not isinstance(types, list):
-            types = [types]
-        names = filetypes[ft_selection].get("name", [ft_selection])
-        for idx, type_ in enumerate(types):
-            name = names[idx] if idx < len(names) else type_
-            button = QPushButton(f"Select {name}")
-            label = QLabel()  
-            button.clicked.connect(lambda _, idx=idx, type_=type_: self.open_file_dialog(idx, type_))
-            h_layout = QHBoxLayout()  
-            h_layout.addWidget(button)
-            h_layout.addWidget(label)
-            self.layout.addLayout(h_layout)
-            self.file_labels.append(label)
-            self.hlayouts.append(h_layout)  
-
-    def open_file_dialog(self, idx, type_):
-        file_dialog = QFileDialog()
-        if type_ == "file":
-            file_dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
-            if file_dialog.exec():
-                selected_paths = file_dialog.selectedFiles()
-                self.file_labels[idx].setText('; '.join(selected_paths))
-        elif type_ == "folder":
-            file_dialog.setFileMode(QFileDialog.FileMode.Directory)
-            file_dialog.setOption(QFileDialog.Option.ShowDirsOnly, True)
-            if file_dialog.exec():
-                selected_path = file_dialog.selectedFiles()[0]
-                current_text = self.file_labels[idx].text()
-                if current_text:
-                    self.file_labels[idx].setText(current_text + '; ' + selected_path)
-                else:
-                    self.file_labels[idx].setText(selected_path)
+    def submit(self):
+        return self.get_selections(), self.selected_files
 
 class App(QWizard):
-
     def __init__(self):
         super().__init__()
-        self.FiletypeSelectionStep1 = FiletypeSelectionStep1()
-        self.CompanyDataSelectionStep2 = CompanyDataSelectionStep2()
-        self.FileSelectionStep3 = FileSelectionStep3()
-        self.addPage(self.FiletypeSelectionStep1)
-        self.addPage(self.CompanyDataSelectionStep2)
-        self.addPage(self.FileSelectionStep3)
-        self.setWindowTitle('Aerotract Data Upload Portal')
-        self.accepted.connect(self.on_accept)
-        self.rejected.connect(self.on_reject)
-        self.show()
+        self.selp = SelectionPage()
+        self.addPage(self.selp)
+        self.rvw = ReviewPage()
+        self.addPage(self.rvw)
+        self.setWindowTitle("PyQt6 Wizard")
+        self.finished.connect(self.on_submit)
 
-    def collect_selections(self):
-        selections = {
-            "filetype": self.FiletypeSelectionStep1.get_filetype_selection(),
-            "CLIENT_ID": self.CompanyDataSelectionStep2.dropdowns[0].currentText(),
-            "PROJECT_ID": self.CompanyDataSelectionStep2.dropdowns[1].currentText(),
-            **json.loads(self.CompanyDataSelectionStep2.dropdowns[2].currentText().replace("'", "\"")),
-        }
-        return selections
-    
-    def collect_file_uploads(self):
-        selection = self.FiletypeSelectionStep1.get_filetype_selection()
-        names = self.FiletypeSelectionStep1.get_filetype_entry().get("name", [])
-        if len(names) == 0:
-            names = [selection]
-        files = []
-        types = self.FiletypeSelectionStep1.get_filetype_entry().get("type")
-        types = [types] if not isinstance(types, list) else types
-        for idx, label in enumerate(self.FileSelectionStep3.file_labels):
-            local_paths = label.text().split('; ')  
-            files.append(local_paths)  
-        out = {
-            "names": names,
-            "files": files,
-            "type": types
-        }
-        return out
+    def on_submit(self):
+        selections, files = self.rvw.submit()
+        filetype, client, project, stands = selections
+        client_id = client.split(":")[0]
+        project_id = project.split(":")[0]
+        for stand in stands:
+            stand_id = stand.split(":")[0]
+            stand_p_id = stand.split(",")[-1].strip()
+            stand_files = files[stand]
+            print(client_id, project_id, stand_id, stand_p_id, stand_files)
+            entry = {
+                "filetype": filetype,
+                "CLIENT_ID": client_id, 
+                "PROJECT_ID": project_id,
+                "STAND_ID": stand_id,
+                "STAND_PERSISTENT_ID": stand_p_id,
+                "names": [filetype],
+                "files": [stand_files],
+                "type": [self.selp.filetypes[filetype]["type"]] * len(stand_files)
+            }
+            entry_json = json.dumps(entry, indent=4)
+            uploadQ.put(entry_json)
 
-    def on_accept(self):
-        report = {
-            **self.collect_selections(),
-            **self.collect_file_uploads()
-        }
-        reportstr = json.dumps(report, indent=4)
-        print(reportstr)
-        uploadQ.put(reportstr)
-        return report
-    
-    def on_reject(self):
-        sys.exit(1)
-
-def main():
-    app = QApplication(sys.argv)
-    ex = App()
-    sys.exit(app.exec())
 
 if __name__ == '__main__':
-    main()
+    app = QApplication(sys.argv)
+    window = App()
+    window.show()
+    sys.exit(app.exec())
