@@ -1,6 +1,7 @@
 import sys
 from PyQt6.QtWidgets import (QApplication, QWizard, QHBoxLayout, QVBoxLayout, 
-                    QComboBox, QLabel, QPushButton, QFileDialog, QWizardPage)
+                    QComboBox, QLabel, QPushButton, QFileDialog, QWizardPage,
+                    QListWidget)
 import json
 import integration
 import persistqueue
@@ -24,10 +25,7 @@ else:
 
 uploadQ = persistqueue.Queue(sq_path, autosave=True, serializer=pq_json)
 
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QComboBox, QListWidget, QLabel
-
 class SelectionPage(QWizardPage):
-
     def __init__(self):
         super().__init__()
         self.filetypes = integration.get_filetypes()
@@ -96,6 +94,7 @@ class SelectionPage(QWizardPage):
 class ReviewPage(QWizardPage):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.filetypes = integration.get_filetypes()
         self.setTitle("Review Selections")
         layout = QVBoxLayout(self)
         self.filetype_label = QLabel(self)
@@ -145,24 +144,12 @@ class ReviewPage(QWizardPage):
             files.append(filename)
             self.selected_files[stand] = files
 
-    def submit(self):
-        return self.get_selections(), self.selected_files
-
-class App(QWizard):
-    def __init__(self):
-        super().__init__()
-        self.selp = SelectionPage()
-        self.addPage(self.selp)
-        self.rvw = ReviewPage()
-        self.addPage(self.rvw)
-        self.setWindowTitle("PyQt6 Wizard")
-        self.finished.connect(self.on_submit)
-
-    def on_submit(self):
-        selections, files = self.rvw.submit()
+    def get_entries(self):
+        selections, files = self.get_selections(), self.selected_files
         filetype, client, project, stands = selections
         client_id = client.split(":")[0]
         project_id = project.split(":")[0]
+        entries = []
         for stand in stands:
             stand_id = stand.split(":")[0]
             stand_p_id = stand.split(",")[-1].strip()
@@ -175,11 +162,49 @@ class App(QWizard):
                 "STAND_PERSISTENT_ID": stand_p_id,
                 "names": [filetype],
                 "files": [stand_files],
-                "type": [self.selp.filetypes[filetype]["type"]] * len(stand_files)
-            }
+                "type": [self.filetypes[filetype]["type"]] * len(stand_files)
+            }   
+            entries.append(entry)
+        return entries
+    
+class VerificationPage(QWizardPage):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setTitle("Verify Submissions")
+        layout = QVBoxLayout(self)
+        self.label = QLabel("Below are the entries for verification:", self)
+        layout.addWidget(self.label)
+        self.list_widget = QListWidget(self)
+        layout.addWidget(self.list_widget)
+        self.setLayout(layout)
+
+    def initializePage(self):
+        entries = self.wizard().rvw.get_entries()
+        vkeys = ["CLIENT_ID", "PROJECT_ID", "STAND_ID", "filetype", "files"]
+        entries = [{k:e[k] for k in vkeys} for e in entries]
+        formatted_entries = [json.dumps(e, indent=4) for e in entries]
+        self.list_widget.clear()
+        self.list_widget.addItems(formatted_entries)
+
+class App(QWizard):
+    def __init__(self):
+        super().__init__()
+        self.selp = SelectionPage()
+        self.addPage(self.selp)
+        self.rvw = ReviewPage()
+        self.addPage(self.rvw)
+        self.verify = VerificationPage()
+        self.addPage(self.verify)
+        self.setWindowTitle("PyQt6 Wizard")
+        self.finished.connect(self.on_submit)
+
+    def on_submit(self):
+        entries = self.rvw.get_entries()
+        for entry in entries:
             entry_json = json.dumps(entry, indent=4)
             uploadQ.put(entry_json)
-
+            print(entry_json)
+            sys.stdout.flush()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
