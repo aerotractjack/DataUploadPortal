@@ -21,14 +21,14 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa.pub
           ssh-keyscan -p 1010 -H 67.210.192.18 >> ~/.ssh/known_hosts
-          ssh-keyscan -p 2593 -H 67.210.192.18 >> ~/.ssh/known_hosts
+          # ssh-keyscan -p 2593 -H 67.210.192.18 >> ~/.ssh/known_hosts
           ssh-keyscan -p 5902 -H 67.210.192.18 >> ~/.ssh/known_hosts
 
-      - name: Deploy to Jack WS
-        run: |
-          ssh -o PasswordAuthentication=no -p 2593 aerotract@67.210.192.18 "mkdir -p /home/aerotract/software/DataUploadPortal"
-          scp -o PasswordAuthentication=no -P 2593 -r ./* aerotract@67.210.192.18:/home/aerotract/software/DataUploadPortal
-          ssh -o PasswordAuthentication=no -p 2593 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
+      # - name: Deploy to Jack WS
+      #   run: |
+      #     ssh -o PasswordAuthentication=no -p 2593 aerotract@67.210.192.18 "mkdir -p /home/aerotract/software/DataUploadPortal"
+      #     scp -o PasswordAuthentication=no -P 2593 -r ./* aerotract@67.210.192.18:/home/aerotract/software/DataUploadPortal
+      #     ssh -o PasswordAuthentication=no -p 2593 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
 
       - name: Deploy to WS003
         run: |
