@@ -28,13 +28,16 @@ jobs:
         run: |
           ssh -o PasswordAuthentication=no -p 2593 aerotract@67.210.192.18 "mkdir -p /home/aerotract/software/DataUploadPortal"
           scp -o PasswordAuthentication=no -P 2593 -r ./* aerotract@67.210.192.18:/home/aerotract/software/DataUploadPortal
+          ssh -o PasswordAuthentication=no -p 2593 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
 
       - name: Deploy to WS003
         run: |
           ssh -o PasswordAuthentication=no -p 1010 aerotract@67.210.192.18 "mkdir -p /home/aerotract/software/DataUploadPortal"
           scp -o PasswordAuthentication=no -P 1010 -r ./* aerotract@67.210.192.18:/home/aerotract/software/DataUploadPortal
+          ssh -o PasswordAuthentication=no -p 1010 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
 
       - name: Deploy to WS004
         run: |
           ssh -o PasswordAuthentication=no -p 5902 aerotract@67.210.192.18 "mkdir -p /home/aerotract/software/DataUploadPortal"
           scp -o PasswordAuthentication=no -P 5902 -r ./* aerotract@67.210.192.18:/home/aerotract/software/DataUploadPortal
+          ssh -o PasswordAuthentication=no -p 5902 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"

@@ -1,0 +1,3 @@
+requests
+persist-queue
+PyQT6
