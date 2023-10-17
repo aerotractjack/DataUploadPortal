@@ -23,10 +23,9 @@ else:
     sq_path = os.getenv("STORAGE_QUEUE_WINDOWS_PATH")
     sq_path = base / sq_path
 
-sq_path.parent.mkdir(parents=True, exist_ok=True)
+sq_path = Path(sq_path)
 if not sq_path.exists():
-    sq_path.touch()
-
+    sq_path.mkdir(parents=True, exist_ok=True)
 
 uploadQ = persistqueue.Queue(sq_path, autosave=True, serializer=pq_json)
 
