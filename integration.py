@@ -1,13 +1,14 @@
 import requests
+from config import api_url
 
 def get_filetypes():
-    url = "http://192.168.1.35:5055/api/get_filetypes"
+    url = f"{api_url}/api/get_filetypes"
     req = requests.post(url)
     return req.json()
 
 def get_clients():
     try:
-        url = "http://192.168.1.35:5055/api/get_client_names_ids"
+        url = f"{api_url}/api/get_client_names_ids"
         req = requests.post(url)
         return req.json()
     except:
@@ -15,7 +16,7 @@ def get_clients():
 
 def get_projects(client_id):
     try:
-        url = "http://192.168.1.35:5055/api/get_project_names_ids"
+        url = f"{api_url}/api/get_project_names_ids"
         req = requests.post(url, json={"id": client_id})
         return req.json()
     except:
@@ -23,7 +24,7 @@ def get_projects(client_id):
 
 def get_stands(project_id):
     try:
-        url = "http://192.168.1.35:5055/api/get_stand_names_ids"
+        url = f"{api_url}/api/get_stand_names_ids"
         req = requests.post(url, json={"id": project_id})
         return req.json()
     except:
