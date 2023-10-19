@@ -12,8 +12,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 from functools import partial
 
+# setup upload queue
 platform_name = platform.system()
-
 if platform_name == "Linux":
     load_dotenv("/home/aerotract/NAS/main/software/db_env.sh")
     sq_path = Path(os.getenv("STORAGE_QUEUE_PATH"))
@@ -22,11 +22,9 @@ else:
     base = Path(os.path.expanduser("~"))
     sq_path = os.getenv("STORAGE_QUEUE_WINDOWS_PATH")
     sq_path = base / sq_path
-
 sq_path = Path(sq_path)
 if not sq_path.exists():
     sq_path.mkdir(parents=True, exist_ok=True)
-
 uploadQ = persistqueue.Queue(sq_path, autosave=True, serializer=pq_json)
 
 class SelectionPage(QWizardPage):
