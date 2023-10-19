@@ -2,6 +2,7 @@ import sys
 from PyQt6.QtWidgets import (QApplication, QWizard, QHBoxLayout, QVBoxLayout, 
                     QComboBox, QLabel, QPushButton, QFileDialog, QWizardPage,
                     QListWidget)
+from PyQt6.QtCore import QFileInfo
 import json
 import integration
 import persistqueue
@@ -143,12 +144,26 @@ class ReviewPage(QWizardPage):
             self.stand_file_layouts.addLayout(stand_layout)
 
     def select_file_for_stand(self, stand):
-        file_path, _ = QFileDialog.getOpenFileName(self, f"Select File for {stand}")
-        if file_path:
-            filename = file_path
-            files = self.selected_files.get(stand, [])
-            files.append(filename)
-            self.selected_files[stand] = files
+        folder_path = QFileDialog.getExistingDirectory(
+                self,
+                f"Select File or Folder for {stand}",
+                ""
+            )
+
+        if folder_path:
+            is_file = QFileInfo(folder_path).isFile()
+
+            if is_file:
+                # User selected a file, process it accordingly
+                selected_path = folder_path
+            else:
+                # User selected a folder, process it accordingly
+                selected_path = folder_path
+
+            # Process the selected file or folder here
+            files_or_folders = self.selected_files.get(stand, [])
+            files_or_folders.append(selected_path)
+            self.selected_files[stand] = files_or_folders
 
     def get_entries(self):
         selections, files = self.get_selections(), self.selected_files
