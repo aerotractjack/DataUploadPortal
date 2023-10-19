@@ -91,7 +91,7 @@ class SelectionPage(QWizardPage):
         project_id = project_sel.split(":")[0]
         stands = integration.get_stands(project_id)
         s = [f"{stand['STAND_ID']}: {stand['STAND_NAME']}, {stand['STAND_PERSISTENT_ID']}" for stand in stands]
-        self.stand_selection.addItems(["Select STAND(S)", *s])
+        self.stand_selection.addItems(*s)
 
 class ReviewPage(QWizardPage):
     def __init__(self, parent=None):
