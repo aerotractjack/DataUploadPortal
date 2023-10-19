@@ -81,23 +81,21 @@ class SelectionPage(QWizardPage):
     def populate_project_dropdown(self):
         self.project_dropdown.clear()
         client_sel = self.client_dropdown.currentText()
-        try:
-            client_id = client_sel.split(":")[0]
-            projects = integration.get_projects(client_id)
-            p = [f"{project['PROJECT_ID']}: {project['PROJECT_NAME']}" for project in projects]
-            self.project_dropdown.addItems(["Select PROJECT", *p])
-        except:
-            pass
+        if ":" not in client_sel:
+            return
+        client_id = client_sel.split(":")[0]
+        projects = integration.get_projects(client_id)
+        p = [f"{project['PROJECT_ID']}: {project['PROJECT_NAME']}" for project in projects]
+        self.project_dropdown.addItems(["Select PROJECT", *p])
 
     def populate_stand_list(self):
         project_sel = self.project_dropdown.currentText()
-        try:
-            project_id = project_sel.split(":")[0]
-            stands = integration.get_stands(project_id)
-            s = [f"{stand['STAND_ID']}: {stand['STAND_NAME']}, {stand['STAND_PERSISTENT_ID']}" for stand in stands]
-            self.stand_selection.addItems(*s)
-        except:
-            pass
+        if ":" not in project_sel:
+            return 
+        project_id = project_sel.split(":")[0]
+        stands = integration.get_stands(project_id)
+        s = [f"{stand['STAND_ID']}: {stand['STAND_NAME']}, {stand['STAND_PERSISTENT_ID']}" for stand in stands]
+        self.stand_selection.addItems(*s)
 
 class ReviewPage(QWizardPage):
     def __init__(self, parent=None):
