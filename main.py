@@ -129,6 +129,7 @@ class ReviewPage(QWizardPage):
     def initializePage(self):
         # Directly get the current text from the QComboBox widgets
         filetype, client, project, stands = self.get_selections()
+        file_or_folder = self.filetypes[filetype]["type"]
         self.filetype_label.setText(f"Filetype: {filetype}")
         self.client_label.setText(f"Client: {client}")
         self.project_label.setText(f"Project: {project}")
@@ -136,7 +137,7 @@ class ReviewPage(QWizardPage):
             stand_layout = QHBoxLayout()
             stand_label = QLabel(stand, self)
             self.stand_labels[stand] = stand_label
-            select_file_btn = QPushButton("Select File", self)
+            select_file_btn = QPushButton(f"Select {file_or_folder} ", self)
             select_file_btn.clicked.connect(partial(self.select_file_for_stand, filetype, stand))
             stand_layout.addWidget(stand_label)
             stand_layout.addWidget(select_file_btn)
