@@ -137,29 +137,26 @@ class ReviewPage(QWizardPage):
             stand_label = QLabel(stand, self)
             self.stand_labels[stand] = stand_label
             select_file_btn = QPushButton("Select File", self)
-            select_file_btn.clicked.connect(partial(self.select_file_for_stand, stand))
+            select_file_btn.clicked.connect(partial(self.select_file_for_stand, filetype, stand))
             stand_layout.addWidget(stand_label)
             stand_layout.addWidget(select_file_btn)
             self.stand_file_layouts.addLayout(stand_layout)
 
-    def select_file_for_stand(self, stand):
-        folder_path = QFileDialog.getExistingDirectory(
-                self,
-                f"Select File or Folder for {stand}",
-                ""
-            )
-
-        if folder_path:
-            is_file = QFileInfo(folder_path).isFile()
-
-            if is_file:
-                # User selected a file, process it accordingly
+    def select_file_for_stand(self, filetype, stand):
+        file_or_folder = self.filetypes[filetype]["type"]
+        selected_path = ""
+        if file_or_folder == "file":
+            # Open a dialog to select a file
+            file_path, _ = QFileDialog.getOpenFileName(self, f"Select File for {stand}", "")
+            if file_path:
+                selected_path = file_path
+        elif file_or_folder == "folder":
+            # Open a dialog to select a folder
+            folder_path = QFileDialog.getExistingDirectory(self, f"Select Folder for {stand}", "")
+            if folder_path:
                 selected_path = folder_path
-            else:
-                # User selected a folder, process it accordingly
-                selected_path = folder_path
-
-            # Process the selected file or folder here
+        # Process the selected file or folder here (if any path was selected)
+        if selected_path:
             files_or_folders = self.selected_files.get(stand, [])
             files_or_folders.append(selected_path)
             self.selected_files[stand] = files_or_folders
