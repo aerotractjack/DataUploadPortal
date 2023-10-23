@@ -42,7 +42,6 @@ class SelectionPage(QWizardPage):
 
     def init_ui(self):
         self.setWindowTitle("PyQt6 Dropdowns")
-
         layout = QVBoxLayout()
 
         self.file_dropdown = QComboBox(self)
