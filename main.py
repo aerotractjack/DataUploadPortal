@@ -41,7 +41,7 @@ class SelectionPage(QWizardPage):
         self.registerField("project*", self.project_dropdown)
 
     def init_ui(self):
-        self.setWindowTitle("PyQt6 Dropdowns")
+        self.setWindowTitle("Data Upload Portal")
         layout = QVBoxLayout()
 
         self.file_dropdown = QComboBox(self)
