@@ -33,7 +33,6 @@ class SelectionPage(QWizardPage):
         super().__init__()
         self.filetypes = integration.get_filetypes()
         self.init_ui()
-        self.setTitle("Select Data")
         layout = QVBoxLayout()
         self.setLayout(layout)
         self.registerField("filetype*", self.file_dropdown)
@@ -213,7 +212,7 @@ class App(QWizard):
         self.addPage(self.rvw)
         self.verify = VerificationPage()
         self.addPage(self.verify)
-        self.setWindowTitle("PyQt6 Wizard")
+        self.setWindowTitle("Data Upload Portal")
         self.finished.connect(self.on_submit)
 
     def on_submit(self):
