@@ -26,12 +26,12 @@ def get_stands(project_id):
     try:
         url = f"{api_url}/api/get_stand_names_ids"
         req = requests.post(url, json={"id": project_id})
-        return req.json()
+        stands = req.json()
+        return sorted(stands, key=lambda x: x["STAND_ID"])
     except:
         return []
 
 if __name__ == "__main__":
-    print(get_filetypes())
-    print(get_clients())
-    print(get_projects(10007))
-    print(get_stands(101036))
+    s = get_stands(101037)
+    for x in s:
+        print(x["STAND_ID"])
