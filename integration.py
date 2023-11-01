@@ -30,8 +30,18 @@ def get_stands(project_id):
         return sorted(stands, key=lambda x: x["STAND_ID"])
     except:
         return []
-
+    
+def get_stand_pid_from_ids(client_id, project_id, stand_id):
+    try:
+        url = f"{api_url}/api/stand_pid_from_ids"
+        req = requests.post(url, json={"client_id": client_id, "project_id": project_id, "stand_id": stand_id})
+        return req.json()[0]["STAND_PERSISTENT_ID"]
+    except:
+        return 
+    
 if __name__ == "__main__":
-    s = get_stands(101037)
-    for x in s:
-        print(x["STAND_ID"])
+    # print(get_filetypes())
+    # print(get_clients())
+    # print(get_projects(10007))
+    # print(get_stands(101036))
+    print(get_stand_pid_from_ids(10009, 101005, 205))

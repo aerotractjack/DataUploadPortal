@@ -3,19 +3,23 @@ from PyQt6.QtWidgets import (QApplication, QWizard, QHBoxLayout, QVBoxLayout,
                     QComboBox, QLabel, QPushButton, QFileDialog, QWizardPage,
                     QListWidget)
 from PyQt6.QtCore import QFileInfo
+from PyQt6.QtGui import QFont
 import json
 import integration
 import persistqueue
 from persistqueue.serializers import json as pq_json
 import os
 import platform
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from dotenv import load_dotenv
 from functools import partial
+import pandas as pd
 
 # setup upload queue
 platform_name = platform.system()
-if platform_name == "Linux":
+is_linux = platform_name == "Linux"
+
+if is_linux:
     load_dotenv("/home/aerotract/NAS/main/software/db_env.sh")
     sq_path = Path(os.getenv("STORAGE_QUEUE_PATH"))
 else:
@@ -28,7 +32,7 @@ if not sq_path.exists():
     sq_path.mkdir(parents=True, exist_ok=True)
 uploadQ = persistqueue.Queue(sq_path, autosave=True, serializer=pq_json)
 
-class SelectionPage(QWizardPage):
+class ProjectDataSelectionPage(QWizardPage):
     def __init__(self):
         super().__init__()
         self.filetypes = integration.get_filetypes()
@@ -48,6 +52,10 @@ class SelectionPage(QWizardPage):
         layout.addWidget(QLabel("Filetype"))
         layout.addWidget(self.file_dropdown)
 
+        self.csv_submission_button = QPushButton("Submit CSV File", self)
+        self.csv_submission_button.clicked.connect(self.go_to_csv_submission_page)
+        layout.addWidget(self.csv_submission_button)
+
         self.client_dropdown = QComboBox(self)
         self.client_dropdown.currentIndexChanged.connect(self.populate_project_dropdown)
         layout.addWidget(QLabel("Client"))
@@ -65,6 +73,10 @@ class SelectionPage(QWizardPage):
 
         self.setLayout(layout)
         self.populate_initial_data()
+    
+    def go_to_csv_submission_page(self):
+        self.wizard().setProperty("nextPage", "csv")
+        self.wizard().next()
 
     def populate_initial_data(self):
         self.file_dropdown.addItem("Please select a filetype")
@@ -96,7 +108,67 @@ class SelectionPage(QWizardPage):
         s = [f"{stand['STAND_ID']}: {stand['STAND_NAME']}, {stand['STAND_PERSISTENT_ID']}" for stand in stands]
         self.stand_selection.addItems(s)
 
-class ReviewPage(QWizardPage):
+
+class CSVFileSubmissionPage(QWizardPage):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        layout = QVBoxLayout(self)
+        instructions_label = QLabel("Please upload a csv file with the following header:", self)
+        layout.addWidget(instructions_label)
+        header_label = QLabel(self)
+        header_label.setFont(QFont("Monospace"))  # Setting font to Monospace
+        header_label.setText("CLIENT_ID,PROJECT_ID,STAND_ID,SOURCE,SUB_SOURCE")
+        layout.addWidget(header_label)
+        self.file_button = QPushButton("Select CSV File", self)
+        self.file_button.clicked.connect(self.select_file)
+        layout.addWidget(self.file_button)
+        self.filename_label = QLabel("", self)
+        layout.addWidget(self.filename_label)
+        self.setLayout(layout)
+        self.upload = None
+        self.filetypes = integration.get_filetypes()
+
+
+    def initializePage(self):
+        filetype = self.wizard().page(0).file_dropdown.currentText()
+        self.setTitle(f"CSV File Submission for {filetype.upper()}")
+
+    def select_file(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Select CSV File", "", "CSV Files (*.csv)")
+        if not file_path:
+            return
+        self.filename_label.setText(file_path.split("/")[-1])  # Only display the filename, not the entire path
+        files = pd.read_csv(file_path, index_col=False).fillna("")
+        path_cls = Path if is_linux else PureWindowsPath
+        files["FULL"] = files.apply(lambda row: str(path_cls(row['SOURCE']) / row['SUB_SOURCE']), axis=1)
+        def group_and_aggregate(df):
+            grouped_df = df.groupby(['CLIENT_ID', 'PROJECT_ID', 'STAND_ID'])['FULL'].agg(list).reset_index()
+            return grouped_df
+        self.upload = group_and_aggregate(files)
+
+    def get_entries(self):
+        if self.upload is None:
+            return []
+        entries = []
+        filetype = self.wizard().page(0).file_dropdown.currentText()
+        for i, r in self.upload.iterrows():
+            stand_p_id = integration.get_stand_pid_from_ids(
+                r["CLIENT_ID"], r["PROJECT_ID"], r["STAND_ID"]
+            )
+            entry = {
+                "filetype": filetype,
+                "CLIENT_ID": r["CLIENT_ID"], 
+                "PROJECT_ID": r["PROJECT_ID"],
+                "STAND_ID": r["STAND_ID"],
+                "STAND_PERSISTENT_ID": stand_p_id,
+                "names": [filetype],
+                "files": [r["FULL"]],
+                "type": [self.filetypes[filetype]["type"]] * len(r["FULL"])
+            }   
+            entries.append(entry)
+        return entries
+                 
+class FileSelectionPage(QWizardPage):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.filetypes = integration.get_filetypes()
@@ -121,7 +193,7 @@ class ReviewPage(QWizardPage):
         project = self.wizard().page(0).project_dropdown.currentText()
         
         # Access the previous page and its stand_selection directly
-        selection_page = self.wizard().page(0)  # Assuming SelectionPage is the first page added to the wizard
+        selection_page = self.wizard().page(0)  # Assuming ProjectDataSelectionPage is the first page added to the wizard
         stands = [item.text() for item in selection_page.stand_selection.selectedItems()]
         return filetype, client, project, stands
 
@@ -197,6 +269,7 @@ class VerificationPage(QWizardPage):
 
     def initializePage(self):
         entries = self.wizard().rvw.get_entries()
+        entries.extend(self.wizard().csv.get_entries())
         vkeys = ["CLIENT_ID", "PROJECT_ID", "STAND_ID", "filetype", "files"]
         entries = [{k:e[k] for k in vkeys} for e in entries]
         formatted_entries = [json.dumps(e, indent=4) for e in entries]
@@ -206,17 +279,33 @@ class VerificationPage(QWizardPage):
 class App(QWizard):
     def __init__(self):
         super().__init__()
-        self.selp = SelectionPage()
+        self.selp = ProjectDataSelectionPage()
         self.addPage(self.selp)
-        self.rvw = ReviewPage()
+        self.rvw = FileSelectionPage()
         self.addPage(self.rvw)
+        self.csv = CSVFileSubmissionPage()
+        self.addPage(self.csv)
         self.verify = VerificationPage()
         self.addPage(self.verify)
         self.setWindowTitle("Data Upload Portal")
         self.finished.connect(self.on_submit)
 
+    def nextId(self):
+        current_page = self.currentPage()
+        if current_page is self.selp:
+            if self.property("nextPage") == "csv":
+                return 2
+            else:
+                return 1
+        elif current_page is self.csv:
+            return 3
+        elif current_page is self.rvw:
+            return 3
+        return -1
+
     def on_submit(self):
         entries = self.rvw.get_entries()
+        entries.extend(self.csv.get_entries())
         for entry in entries:
             entry_json = json.dumps(entry, indent=4)
             uploadQ.put(entry_json)

@@ -1,0 +1,18 @@
+{
+    "filetype": "ai_results_file",
+    "CLIENT_ID": "10007",
+    "PROJECT_ID": "101036",
+    "STAND_ID": 100,
+    "STAND_PERSISTENT_ID": 1000243,
+    "names": [
+        "ai_results_file"
+    ],
+    "files": [
+        [
+            "/home/aerotract/software/DataUploadPortal/integration.py"
+        ]
+    ],
+    "type": [
+        "file"
+    ]
+}
