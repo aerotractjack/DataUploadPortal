@@ -97,7 +97,7 @@ class ProjectDataSelectionPage(QWizardPage):
         client_id = client_sel.split(":")[0]
         projects = integration.get_projects(client_id)
         p = [f"{project['PROJECT_ID']}: {project['PROJECT_NAME']}" for project in projects]
-        self.project_dropdown.addItems(p)
+        self.project_dropdown.addItems(["Make a selection", *p])
 
     def populate_stand_list(self):
         project_sel = self.project_dropdown.currentText()
@@ -111,27 +111,21 @@ class CSVFileSubmissionPage(QWizardPage):
     def __init__(self, parent=None):
         super().__init__(parent)
         layout = QVBoxLayout(self)
-        
-        # Text Instructions
         instructions_label = QLabel("Please upload a csv file with the following header:", self)
         layout.addWidget(instructions_label)
-        
-        # CSV Header in monospaced font
         header_label = QLabel(self)
         header_label.setFont(QFont("Monospace"))  # Setting font to Monospace
         header_label.setText("CLIENT_ID,PROJECT_ID,STAND_ID,SOURCE,SUB_SOURCE")
         layout.addWidget(header_label)
-
-        # File Selection Button
         self.file_button = QPushButton("Select CSV File", self)
         self.file_button.clicked.connect(self.select_file)
         layout.addWidget(self.file_button)
-
-        # Label to display selected filename
         self.filename_label = QLabel("", self)
         layout.addWidget(self.filename_label)
-        
         self.setLayout(layout)
+        self.upload = None
+        self.filetypes = integration.get_filetypes()
+
 
     def initializePage(self):
         filetype = self.wizard().page(0).file_dropdown.currentText()
@@ -144,10 +138,33 @@ class CSVFileSubmissionPage(QWizardPage):
         self.filename_label.setText(file_path.split("/")[-1])  # Only display the filename, not the entire path
         files = pd.read_csv(file_path, index_col=False).fillna("")
         path_cls = Path if is_linux else PureWindowsPath
-        path_cls = PureWindowsPath
         files["FULL"] = files.apply(lambda row: str(path_cls(row['SOURCE']) / row['SUB_SOURCE']), axis=1)
-        print(files)
+        def group_and_aggregate(df):
+            grouped_df = df.groupby(['CLIENT_ID', 'PROJECT_ID', 'STAND_ID'])['FULL'].agg(list).reset_index()
+            return grouped_df
+        self.upload = group_and_aggregate(files)
 
+    def get_entries(self):
+        if self.upload is None:
+            return []
+        entries = []
+        filetype = self.wizard().page(0).file_dropdown.currentText()
+        for i, r in self.upload.iterrows():
+            stand_p_id = integration.get_stand_pid_from_ids(
+                r["CLIENT_ID"], r["PROJECT_ID"], r["STAND_ID"]
+            )
+            entry = {
+                "filetype": filetype,
+                "CLIENT_ID": r["CLIENT_ID"], 
+                "PROJECT_ID": r["PROJECT_ID"],
+                "STAND_ID": r["STAND_ID"],
+                "STAND_PERSISTENT_ID": stand_p_id,
+                "names": [filetype],
+                "files": [r["FULL"]],
+                "type": [self.filetypes[filetype]["type"]] * len(r["FULL"])
+            }   
+            entries.append(entry)
+        return entries
                  
 class FileSelectionPage(QWizardPage):
     def __init__(self, parent=None):
@@ -238,6 +255,7 @@ class VerificationPage(QWizardPage):
 
     def initializePage(self):
         entries = self.wizard().rvw.get_entries()
+        entries.extend(self.wizard().csv.get_entries())
         vkeys = ["CLIENT_ID", "PROJECT_ID", "STAND_ID", "filetype", "files"]
         entries = [{k:e[k] for k in vkeys} for e in entries]
         formatted_entries = [json.dumps(e, indent=4) for e in entries]
@@ -273,6 +291,7 @@ class App(QWizard):
 
     def on_submit(self):
         entries = self.rvw.get_entries()
+        entries.extend(self.csv.get_entries())
         for entry in entries:
             entry_json = json.dumps(entry, indent=4)
             uploadQ.put(entry_json)
