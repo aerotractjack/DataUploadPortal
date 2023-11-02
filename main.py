@@ -128,7 +128,6 @@ class CSVFileSubmissionPage(QWizardPage):
         self.upload = None
         self.filetypes = integration.get_filetypes()
 
-
     def initializePage(self):
         filetype = self.wizard().page(0).file_dropdown.currentText()
         self.setTitle(f"CSV File Submission for {filetype.upper()}")
