@@ -108,7 +108,6 @@ class ProjectDataSelectionPage(QWizardPage):
         s = [f"{stand['STAND_ID']}: {stand['STAND_NAME']}, {stand['STAND_PERSISTENT_ID']}" for stand in stands]
         self.stand_selection.addItems(s)
 
-
 class CSVFileSubmissionPage(QWizardPage):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -146,15 +145,20 @@ class CSVFileSubmissionPage(QWizardPage):
         self.upload = group_and_aggregate(files)
 
     def get_entries(self):
+        print("CSV GETTING ENTRIES")
         if self.upload is None:
             return []
         entries = []
+        print(self.upload)
+        self.upload.to_csv("test.csv")
         for i, r in self.upload.iterrows():
+            print("*", i)
             stand_p_id = integration.get_stand_pid_from_ids(
                 r["CLIENT_ID"], r["PROJECT_ID"], r["STAND_ID"]
             )
+            filetype = "flight_images" # r["FILETYPE"].lower()
             entry = {
-                "filetype": r["FILETYPE"].lower(),
+                "filetype": filetype,
                 "CLIENT_ID": r["CLIENT_ID"], 
                 "PROJECT_ID": r["PROJECT_ID"],
                 "STAND_ID": r["STAND_ID"],
