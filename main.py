@@ -47,14 +47,14 @@ class ProjectDataSelectionPage(QWizardPage):
         self.setWindowTitle("Data Upload Portal")
         layout = QVBoxLayout()
 
+        self.csv_submission_button = QPushButton("Submit CSV File", self)
+        self.csv_submission_button.clicked.connect(self.go_to_csv_submission_page)
+        layout.addWidget(self.csv_submission_button)
+
         self.file_dropdown = QComboBox(self)
         self.file_dropdown.currentIndexChanged.connect(self.populate_client_dropdown)
         layout.addWidget(QLabel("Filetype"))
         layout.addWidget(self.file_dropdown)
-
-        self.csv_submission_button = QPushButton("Submit CSV File", self)
-        self.csv_submission_button.clicked.connect(self.go_to_csv_submission_page)
-        layout.addWidget(self.csv_submission_button)
 
         self.client_dropdown = QComboBox(self)
         self.client_dropdown.currentIndexChanged.connect(self.populate_project_dropdown)
@@ -117,7 +117,7 @@ class CSVFileSubmissionPage(QWizardPage):
         layout.addWidget(instructions_label)
         header_label = QLabel(self)
         header_label.setFont(QFont("Monospace"))  # Setting font to Monospace
-        header_label.setText("CLIENT_ID,PROJECT_ID,STAND_ID,SOURCE,SUB_SOURCE")
+        header_label.setText("FILETYPE,CLIENT_ID,PROJECT_ID,STAND_ID,SOURCE,SUB_SOURCE")
         layout.addWidget(header_label)
         self.file_button = QPushButton("Select CSV File", self)
         self.file_button.clicked.connect(self.select_file)
@@ -150,13 +150,12 @@ class CSVFileSubmissionPage(QWizardPage):
         if self.upload is None:
             return []
         entries = []
-        filetype = self.wizard().page(0).file_dropdown.currentText()
         for i, r in self.upload.iterrows():
             stand_p_id = integration.get_stand_pid_from_ids(
                 r["CLIENT_ID"], r["PROJECT_ID"], r["STAND_ID"]
             )
             entry = {
-                "filetype": filetype,
+                "filetype": r["FILETYPE"].lower(),
                 "CLIENT_ID": r["CLIENT_ID"], 
                 "PROJECT_ID": r["PROJECT_ID"],
                 "STAND_ID": r["STAND_ID"],
