@@ -14,6 +14,7 @@ from pathlib import Path, PureWindowsPath
 from dotenv import load_dotenv
 from functools import partial
 import pandas as pd
+from filelock import FileLock
 
 # setup upload queue
 platform_name = platform.system()
@@ -22,15 +23,20 @@ is_linux = platform_name == "Linux"
 if is_linux:
     load_dotenv("/home/aerotract/NAS/main/software/db_env.sh")
     sq_path = Path(os.getenv("STORAGE_QUEUE_PATH"))
+    lock_path = os.getenv("STORAGE_QUEUE_LOCK_PATH")
 else:
     load_dotenv("Z:\\software\\db_env.sh")
     base = Path(os.path.expanduser("~"))
     sq_path = os.getenv("STORAGE_QUEUE_WINDOWS_PATH")
     sq_path = base / sq_path
+    lock_path = (base / Path(os.getenv("STORAGE_QUEUE_LOCK_WINDOWS_PATH"))).as_posix()
 sq_path = Path(sq_path)
+
 if not sq_path.exists():
     sq_path.mkdir(parents=True, exist_ok=True)
+
 uploadQ = persistqueue.Queue(sq_path, autosave=True, serializer=pq_json)
+lock = FileLock(lock_path)
 
 class ProjectDataSelectionPage(QWizardPage):
     def __init__(self):
@@ -140,23 +146,19 @@ class CSVFileSubmissionPage(QWizardPage):
         path_cls = Path if is_linux else PureWindowsPath
         files["FULL"] = files.apply(lambda row: str(path_cls(row['SOURCE']) / row['SUB_SOURCE']), axis=1)
         def group_and_aggregate(df):
-            grouped_df = df.groupby(['CLIENT_ID', 'PROJECT_ID', 'STAND_ID'])['FULL'].agg(list).reset_index()
+            grouped_df = df.groupby(['FILETYPE', 'CLIENT_ID', 'PROJECT_ID', 'STAND_ID'])['FULL'].agg(list).reset_index()
             return grouped_df
         self.upload = group_and_aggregate(files)
 
     def get_entries(self):
-        print("CSV GETTING ENTRIES")
         if self.upload is None:
             return []
         entries = []
-        print(self.upload)
-        self.upload.to_csv("test.csv")
         for i, r in self.upload.iterrows():
-            print("*", i)
             stand_p_id = integration.get_stand_pid_from_ids(
                 r["CLIENT_ID"], r["PROJECT_ID"], r["STAND_ID"]
             )
-            filetype = "flight_images" # r["FILETYPE"].lower()
+            filetype = r["FILETYPE"].lower()
             entry = {
                 "filetype": filetype,
                 "CLIENT_ID": r["CLIENT_ID"], 
@@ -310,7 +312,8 @@ class App(QWizard):
         entries.extend(self.csv.get_entries())
         for entry in entries:
             entry_json = json.dumps(entry, indent=4)
-            uploadQ.put(entry_json)
+            with lock:
+                uploadQ.put(entry_json)
             print(entry_json)
             sys.stdout.flush()
 
