@@ -53,9 +53,23 @@ class ProjectDataSelectionPage(QWizardPage):
         self.setWindowTitle("Data Upload Portal")
         layout = QVBoxLayout()
 
-        self.csv_submission_button = QPushButton("Submit CSV File", self)
-        self.csv_submission_button.clicked.connect(self.go_to_csv_submission_page)
-        layout.addWidget(self.csv_submission_button)
+        self.csv_page_submission_button = QPushButton("FILE UPLOAD: Submit CSV File", self)
+        self.csv_page_submission_button.clicked.connect(self.go_to_csv_submission_page)
+        self.csv_page_submission_button.setStyleSheet("""
+            QPushButton { background-color: purple; color: white; }
+            QPushButton:hover { background-color: #5499C7; }
+            QPushButton:pressed { background-color: #2980B9; }
+        """)
+        layout.addWidget(self.csv_page_submission_button)
+
+        self.bulk_data_update_button = QPushButton("DATA UPDATE: Submit CSV File", self)
+        self.bulk_data_update_button.clicked.connect(self.go_to_data_update_page)
+        self.bulk_data_update_button.setStyleSheet("""
+            QPushButton { background-color: red; color: white; }
+            QPushButton:hover { background-color: #5499C7; }
+            QPushButton:pressed { background-color: #2980B9; }
+        """)
+        layout.addWidget(self.bulk_data_update_button)
 
         self.file_dropdown = QComboBox(self)
         self.file_dropdown.currentIndexChanged.connect(self.populate_client_dropdown)
@@ -82,6 +96,10 @@ class ProjectDataSelectionPage(QWizardPage):
     
     def go_to_csv_submission_page(self):
         self.wizard().setProperty("nextPage", "csv")
+        self.wizard().next()
+
+    def go_to_data_update_page(self):
+        self.wizard().setProperty("nextPage", "data_update")
         self.wizard().next()
 
     def populate_initial_data(self):
@@ -114,6 +132,57 @@ class ProjectDataSelectionPage(QWizardPage):
         s = [f"{stand['STAND_ID']}: {stand['STAND_NAME']}, {stand['STAND_PERSISTENT_ID']}" for stand in stands]
         self.stand_selection.addItems(s)
 
+class BulkDataUpdatePage(QWizardPage):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        layout = QVBoxLayout(self)
+        instructions_label = QLabel("Please upload a csv file with the following header:", self)
+        layout.addWidget(instructions_label)
+        header_label = QLabel(self)
+        header_label.setFont(QFont("Monospace"))  # Setting font to Monospace
+        header_label.setText("FILETYPE,CLIENT_ID,PROJECT_ID,STAND_ID")
+        layout.addWidget(header_label)
+        self.file_button = QPushButton("Select CSV File", self)
+        self.file_button.clicked.connect(self.select_file)
+        layout.addWidget(self.file_button)
+        self.filename_label = QLabel("", self)
+        layout.addWidget(self.filename_label)
+        self.setLayout(layout)
+        self.upload = None
+        self.filetypes = integration.get_filetypes()
+
+    def initializePage(self):
+        self.setTitle("Data Update: CSV File Submission")
+
+    def select_file(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Select CSV File", "", "CSV Files (*.csv)")
+        if not file_path:
+            return
+        self.filename_label.setText(file_path.split("/")[-1])  # Only display the filename, not the entire path
+        self.upload = pd.read_csv(file_path, index_col=False).fillna("")
+
+    def get_entries(self):
+        return self.upload.to_dict("records")
+  
+class DataVerificationPage(QWizardPage):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setTitle("Verify Data Update Submissions")
+        layout = QVBoxLayout(self)
+        self.label = QLabel("Below are the entries for verification:", self)
+        layout.addWidget(self.label)
+        self.list_widget = QListWidget(self)
+        layout.addWidget(self.list_widget)
+        self.setLayout(layout)
+
+    def initializePage(self):
+        entries = self.wizard().data_update_page.get_entries()
+        vkeys = ["FILETYPE", "CLIENT_ID", "PROJECT_ID", "STAND_ID"]
+        entries = [{k:e[k] for k in vkeys} for e in entries]
+        formatted_entries = [json.dumps(e, indent=4) for e in entries]
+        self.list_widget.clear()
+        self.list_widget.addItems(formatted_entries)
+   
 class CSVFileSubmissionPage(QWizardPage):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -134,8 +203,7 @@ class CSVFileSubmissionPage(QWizardPage):
         self.filetypes = integration.get_filetypes()
 
     def initializePage(self):
-        filetype = self.wizard().page(0).file_dropdown.currentText()
-        self.setTitle(f"CSV File Submission for {filetype.upper()}")
+        self.setTitle("File Upload: CSV File Submission")
 
     def select_file(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Select CSV File", "", "CSV Files (*.csv)")
@@ -171,7 +239,7 @@ class CSVFileSubmissionPage(QWizardPage):
             }   
             entries.append(entry)
         return entries
-                 
+                
 class FileSelectionPage(QWizardPage):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -260,10 +328,10 @@ class FileSelectionPage(QWizardPage):
             entries.append(entry)
         return entries
     
-class VerificationPage(QWizardPage):
+class FileVerificationPage(QWizardPage):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setTitle("Verify Submissions")
+        self.setTitle("Verify File Upload Submissions")
         layout = QVBoxLayout(self)
         self.label = QLabel("Below are the entries for verification:", self)
         layout.addWidget(self.label)
@@ -272,8 +340,8 @@ class VerificationPage(QWizardPage):
         self.setLayout(layout)
 
     def initializePage(self):
-        entries = self.wizard().rvw.get_entries()
-        entries.extend(self.wizard().csv.get_entries())
+        entries = self.wizard().file_select_page.get_entries()
+        entries.extend(self.wizard().csv_page.get_entries())
         vkeys = ["CLIENT_ID", "PROJECT_ID", "STAND_ID", "filetype", "files"]
         entries = [{k:e[k] for k in vkeys} for e in entries]
         formatted_entries = [json.dumps(e, indent=4) for e in entries]
@@ -283,14 +351,18 @@ class VerificationPage(QWizardPage):
 class App(QWizard):
     def __init__(self):
         super().__init__()
-        self.selp = ProjectDataSelectionPage()
+        self.selp = ProjectDataSelectionPage() # 0
         self.addPage(self.selp)
-        self.rvw = FileSelectionPage()
-        self.addPage(self.rvw)
-        self.csv = CSVFileSubmissionPage()
-        self.addPage(self.csv)
-        self.verify = VerificationPage()
-        self.addPage(self.verify)
+        self.file_select_page = FileSelectionPage() # 1
+        self.addPage(self.file_select_page)
+        self.csv_page = CSVFileSubmissionPage() # 2
+        self.addPage(self.csv_page)
+        self.data_update_page = BulkDataUpdatePage() # 3
+        self.addPage(self.data_update_page)
+        self.verify_page = FileVerificationPage() # 4
+        self.addPage(self.verify_page)
+        self.update_verify_page = DataVerificationPage() # 5
+        self.addPage(self.update_verify_page)
         self.setWindowTitle("Data Upload Portal")
         self.finished.connect(self.on_submit)
 
@@ -299,23 +371,38 @@ class App(QWizard):
         if current_page is self.selp:
             if self.property("nextPage") == "csv":
                 return 2
+            elif self.property("nextPage") == "data_update":
+                return 3
             else:
-                return 1
-        elif current_page is self.csv:
-            return 3
-        elif current_page is self.rvw:
-            return 3
+                return 2
+        elif current_page is self.data_update_page:
+            return 5
+        elif current_page is self.csv_page:
+            return 4
+        elif current_page is self.file_select_page:
+            return 4
         return -1
 
     def on_submit(self):
-        entries = self.rvw.get_entries()
-        entries.extend(self.csv.get_entries())
-        for entry in entries:
+        if self.result() != 1:
+            print("=========CANCELLING=========")
+            sys.stdout.flush()
+            return
+        print("=========SUBMITTING=========")
+        sys.stdout.flush()
+        file_entries = self.file_select_page.get_entries()
+        file_entries.extend(self.csv_page.get_entries())
+        for entry in file_entries:
             entry_json = json.dumps(entry, indent=4)
             with lock:
                 uploadQ.put(entry_json)
             print(entry_json)
             sys.stdout.flush()
+        data_updates = self.data_update_page.get_entries()
+        for update in data_updates:
+            print(json.dumps(update, indent=4))
+            sys.stdout.flush()
+            integration.post_update(update)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

@@ -1,5 +1,5 @@
 import requests
-from config import api_url
+from config import api_url, storage_api_url
 
 def get_filetypes():
     url = f"{api_url}/api/get_filetypes"
@@ -37,7 +37,15 @@ def get_stand_pid_from_ids(client_id, project_id, stand_id):
         req = requests.post(url, json={"client_id": client_id, "project_id": project_id, "stand_id": stand_id})
         return req.json()[0]["STAND_PERSISTENT_ID"]
     except:
-        return 
+        return  []
+    
+def post_update(update):
+    url = f"{storage_api_url}/update" 
+    body = {"entry": update}
+    req = requests.post(url, json=body)
+    if not req.status_code == 200:
+        raise ValueError("STORAGE ERROR: " + req.text)
+    return True
     
 if __name__ == "__main__":
     # print(get_filetypes())
