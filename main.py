@@ -405,12 +405,12 @@ class App(QWizard):
             with lock:
                 uploadQ.put(entry_json)
             print(entry_json)
-            dup_logger.info(entry_json)
+            dup_logger.info("Submitting file upload\n" + entry_json)
             sys.stdout.flush()
         data_updates = self.data_update_page.get_entries()
         for update in data_updates:
             print(json.dumps(update, indent=4))
-            dup_logger.info(json.dumps(update, indent=4))
+            dup_logger.info("Submitting data update\n" + json.dumps(update, indent=4))
             sys.stdout.flush()
             integration.post_update(update)
 
