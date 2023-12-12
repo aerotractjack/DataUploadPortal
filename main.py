@@ -16,6 +16,12 @@ from functools import partial
 import pandas as pd
 from filelock import FileLock
 
+from aerologger import AeroLogger
+dup_logger = AeroLogger(
+    'DUP',
+    'DUP/DUP.log'
+)
+
 # setup upload queue
 platform_name = platform.system()
 is_linux = platform_name == "Linux"
@@ -386,6 +392,7 @@ class App(QWizard):
 
     def on_submit(self):
         if self.result() != 1:
+            dup_logger.error("CANCELLING SUBMISSION")
             print("=========CANCELLING=========")
             sys.stdout.flush()
             return
@@ -398,10 +405,12 @@ class App(QWizard):
             with lock:
                 uploadQ.put(entry_json)
             print(entry_json)
+            dup_logger.info(entry_json)
             sys.stdout.flush()
         data_updates = self.data_update_page.get_entries()
         for update in data_updates:
             print(json.dumps(update, indent=4))
+            dup_logger.info(json.dumps(update, indent=4))
             sys.stdout.flush()
             integration.post_update(update)
 
