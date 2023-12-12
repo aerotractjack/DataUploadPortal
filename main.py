@@ -369,12 +369,13 @@ class App(QWizard):
     def nextId(self):
         current_page = self.currentPage()
         if current_page is self.selp:
+            print(self.property("nextPage"))
             if self.property("nextPage") == "csv":
                 return 2
             elif self.property("nextPage") == "data_update":
                 return 3
             else:
-                return 2
+                return 1
         elif current_page is self.data_update_page:
             return 5
         elif current_page is self.csv_page:
