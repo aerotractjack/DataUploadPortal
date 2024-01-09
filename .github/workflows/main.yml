@@ -70,8 +70,9 @@ jobs:
     
       - name: Deploy to Intern 
         run: |
-          ssh -o PasswordAuthentication=no -p 5911 aerotract@67.210.192.18 "mkdir -p /home/aerotract/software/DataUploadPortal"
-          scp -o PasswordAuthentication=no -P 5911 -r ./* aerotract@67.210.192.18:/home/aerotract/software/DataUploadPortal
-          ssh -o PasswordAuthentication=no -p 5911 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
-          ssh -o PasswordAuthentication=no -p 5911 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal/desktop; ./install.sh"
+          ssh -o PasswordAuthentication=no -p 5911 aerotract@67.210.192.18 "ls"
+          # ssh -o PasswordAuthentication=no -p 5911 aerotract@67.210.192.18 "mkdir -p /home/aerotract/software/DataUploadPortal"
+          # scp -o PasswordAuthentication=no -P 5911 -r ./* aerotract@67.210.192.18:/home/aerotract/software/DataUploadPortal
+          # ssh -o PasswordAuthentication=no -p 5911 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
+          # ssh -o PasswordAuthentication=no -p 5911 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal/desktop; ./install.sh"
       

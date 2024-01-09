@@ -1,5 +1,6 @@
 requests
 PyQT6
 persist-queue
+python-dotenv
 aerologger @ git+https://github.com/aerotractjack/AeroLogger@main
 requires_nas @ git+https://github.com/aerotractjack/requires_nas@main
