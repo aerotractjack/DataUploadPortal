@@ -1,5 +1,5 @@
 requests
-persist-queue
 PyQT6
+persist-queue
 aerologger @ git+https://github.com/aerotractjack/AeroLogger@main
 requires_nas @ git+https://github.com/aerotractjack/requires_nas@main
