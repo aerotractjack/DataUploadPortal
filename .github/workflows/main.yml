@@ -28,38 +28,38 @@ jobs:
           ssh-keyscan -p 5910 -H 67.210.192.18 >> ~/.ssh/known_hosts # front office
           ssh-keyscan -p 5911 -H 67.210.192.18 >> ~/.ssh/known_hosts # intern
 
-      - name: Deploy to Sandra
-        run: |
-          ssh -o PasswordAuthentication=no -p 1953 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
-          ssh -o PasswordAuthentication=no -p 1953 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal; git pull"
-          ssh -o PasswordAuthentication=no -p 1953 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal/desktop; ./install.sh"
+      # - name: Deploy to Sandra
+      #   run: |
+      #     ssh -o PasswordAuthentication=no -p 1953 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
+      #     ssh -o PasswordAuthentication=no -p 1953 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal; git pull"
+      #     ssh -o PasswordAuthentication=no -p 1953 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal/desktop; ./install.sh"
 
-      - name: Deploy to Jack WS
-        run: |
-          ssh -o PasswordAuthentication=no -p 2593 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
-          ssh -o PasswordAuthentication=no -p 2593 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal; git pull"
-          ssh -o PasswordAuthentication=no -p 2593 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal/desktop; ./install.sh"
+      # - name: Deploy to Jack WS
+      #   run: |
+      #     ssh -o PasswordAuthentication=no -p 2593 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
+      #     ssh -o PasswordAuthentication=no -p 2593 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal; git pull"
+      #     ssh -o PasswordAuthentication=no -p 2593 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal/desktop; ./install.sh"
 
-      - name: Deploy to Seth WS
-        run: |
-          ssh -o PasswordAuthentication=no -p 2599 aerotract@67.210.192.18 "mkdir -p /home/aerotract/software/DataUploadPortal"
-          scp -o PasswordAuthentication=no -P 2599 -r ./* aerotract@67.210.192.18:/home/aerotract/software/DataUploadPortal
-          ssh -o PasswordAuthentication=no -p 2599 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
-          ssh -o PasswordAuthentication=no -p 2599 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal/desktop; ./install.sh"
+      # - name: Deploy to Seth WS
+      #   run: |
+      #     ssh -o PasswordAuthentication=no -p 2599 aerotract@67.210.192.18 "mkdir -p /home/aerotract/software/DataUploadPortal"
+      #     scp -o PasswordAuthentication=no -P 2599 -r ./* aerotract@67.210.192.18:/home/aerotract/software/DataUploadPortal
+      #     ssh -o PasswordAuthentication=no -p 2599 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
+      #     ssh -o PasswordAuthentication=no -p 2599 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal/desktop; ./install.sh"
 
-      - name: Deploy to Amblynn 
-        run: |
-          ssh -o PasswordAuthentication=no -p 5902 aerotract@67.210.192.18 "mkdir -p /home/aerotract/software/DataUploadPortal"
-          scp -o PasswordAuthentication=no -P 5902 -r ./* aerotract@67.210.192.18:/home/aerotract/software/DataUploadPortal
-          ssh -o PasswordAuthentication=no -p 5902 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
-          ssh -o PasswordAuthentication=no -p 5902 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal/desktop; ./install.sh"
+      # - name: Deploy to Amblynn 
+      #   run: |
+      #     ssh -o PasswordAuthentication=no -p 5902 aerotract@67.210.192.18 "mkdir -p /home/aerotract/software/DataUploadPortal"
+      #     scp -o PasswordAuthentication=no -P 5902 -r ./* aerotract@67.210.192.18:/home/aerotract/software/DataUploadPortal
+      #     ssh -o PasswordAuthentication=no -p 5902 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
+      #     ssh -o PasswordAuthentication=no -p 5902 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal/desktop; ./install.sh"
 
-      - name: Deploy to Heidi 
-        run: |
-          ssh -o PasswordAuthentication=no -p 5909 aerotract@67.210.192.18 "mkdir -p /home/aerotract/software/DataUploadPortal"
-          scp -o PasswordAuthentication=no -P 5909 -r ./* aerotract@67.210.192.18:/home/aerotract/software/DataUploadPortal
-          ssh -o PasswordAuthentication=no -p 5909 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
-          ssh -o PasswordAuthentication=no -p 5909 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal/desktop; ./install.sh"
+      # - name: Deploy to Heidi 
+      #   run: |
+      #     ssh -o PasswordAuthentication=no -p 5909 aerotract@67.210.192.18 "mkdir -p /home/aerotract/software/DataUploadPortal"
+      #     scp -o PasswordAuthentication=no -P 5909 -r ./* aerotract@67.210.192.18:/home/aerotract/software/DataUploadPortal
+      #     ssh -o PasswordAuthentication=no -p 5909 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
+      #     ssh -o PasswordAuthentication=no -p 5909 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal/desktop; ./install.sh"
 
       - name: Deploy to Front Office 
         run: |
