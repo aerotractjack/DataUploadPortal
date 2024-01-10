@@ -86,29 +86,6 @@ env:
   REMOTE_DIR: /home/aerotract/software/DataUploadPortal
 
 jobs:
-  # setup-ssh:
-  #   runs-on: ubuntu-latest
-  #   outputs:
-  #     ssh_config: ${{ steps.config_ssh.outputs.ssh_config }}
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v2
-
-  #     - name: Set up SSH keys and Config
-  #       id: config_ssh
-  #       run: |
-  #         mkdir -p ~/.ssh
-  #         echo "${{ secrets.WS006_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-  #         echo "${{ secrets.WS006_PUBLIC_KEY }}" > ~/.ssh/id_rsa.pub
-  #         chmod 600 ~/.ssh/id_rsa
-  #         chmod 600 ~/.ssh/id_rsa.pub
-  #         ssh-keyscan -p 1953 -H ${{ env.REMOTE_IP }} >> ~/.ssh/known_hosts
-  #         ssh-keyscan -p 2593 -H ${{ env.REMOTE_IP }} >> ~/.ssh/known_hosts
-  #         ssh-keyscan -p 2599 -H ${{ env.REMOTE_IP }} >> ~/.ssh/known_hosts
-  #         ssh-keyscan -p 5902 -H ${{ env.REMOTE_IP }} >> ~/.ssh/known_hosts
-  #         ssh-keyscan -p 5910 -H ${{ env.REMOTE_IP }} >> ~/.ssh/known_hosts
-  #         ssh-keyscan -p 5911 -H ${{ env.REMOTE_IP }} >> ~/.ssh/known_hosts
-
   deploy:
     needs: setup-ssh
     runs-on: ubuntu-latest
