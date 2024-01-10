@@ -45,6 +45,6 @@ jobs:
       - name: Deploy via SSH to ${{ matrix.targets.name }}
         if: matrix.targets.method == 'ssh'
         run: |
-          ssh -o PasswordAuthentication=no -p 1953 aerotract@67.210.192.18 "cd ${{ env.REMOTE_DIR }}; git pull"
+          ssh -o PasswordAuthentication=no -p ${{ matrix.targets.port }} aerotract@67.210.192.18 "cd ${{ env.REMOTE_DIR }}; git pull"
           ssh -o PasswordAuthentication=no -p ${{ matrix.targets.port }} aerotract@${{ env.REMOTE_IP }} "python3 -m pip install --user -r ${{ env.REMOTE_DIR }}/requirements.txt"
           ssh -o PasswordAuthentication=no -p ${{ matrix.targets.port }} aerotract@${{ env.REMOTE_IP }} "cd ${{ env.REMOTE_DIR }}/desktop; ./install.sh"
