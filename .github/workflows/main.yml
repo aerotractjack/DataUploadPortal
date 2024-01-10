@@ -34,17 +34,18 @@ jobs:
           chmod 600 ~/.ssh/id_rsa.pub
           ssh-keyscan -p ${{ matrix.targets.port }} -H ${{ env.REMOTE_IP }} >> ~/.ssh/known_hosts
 
-      - name: Deploy via SCP to ${{ matrix.targets.name }}
+      - name: Deploy updates via SCP to ${{ matrix.targets.name }}
         if: matrix.targets.method == 'scp'
         run: |
           ssh -o PasswordAuthentication=no -p ${{ matrix.targets.port }} aerotract@${{ env.REMOTE_IP }} "mkdir -p ${{ env.REMOTE_DIR }}"
           scp -o PasswordAuthentication=no -P ${{ matrix.targets.port }} -r ./* aerotract@${{ env.REMOTE_IP }}:${{ env.REMOTE_DIR }}
-          ssh -o PasswordAuthentication=no -p ${{ matrix.targets.port }} aerotract@${{ env.REMOTE_IP }} "python3 -m pip install --user -r ${{ env.REMOTE_DIR }}/requirements.txt"
-          ssh -o PasswordAuthentication=no -p ${{ matrix.targets.port }} aerotract@${{ env.REMOTE_IP }} "cd ${{ env.REMOTE_DIR }}/desktop; ./install.sh"
 
-      - name: Deploy via SSH to ${{ matrix.targets.name }}
+      - name: Deploy updates via SSH to ${{ matrix.targets.name }}
         if: matrix.targets.method == 'ssh'
         run: |
           ssh -o PasswordAuthentication=no -p ${{ matrix.targets.port }} aerotract@67.210.192.18 "cd ${{ env.REMOTE_DIR }}; git pull"
+
+      - name: Install updates on ${{ matrix.targets.name }}
+        run: |
           ssh -o PasswordAuthentication=no -p ${{ matrix.targets.port }} aerotract@${{ env.REMOTE_IP }} "python3 -m pip install --user -r ${{ env.REMOTE_DIR }}/requirements.txt"
           ssh -o PasswordAuthentication=no -p ${{ matrix.targets.port }} aerotract@${{ env.REMOTE_IP }} "cd ${{ env.REMOTE_DIR }}/desktop; ./install.sh"
