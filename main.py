@@ -217,6 +217,8 @@ class CSVFileSubmissionPage(QWizardPage):
             return
         self.filename_label.setText(file_path.split("/")[-1])  # Only display the filename, not the entire path
         files = pd.read_csv(file_path, index_col=False).fillna("")
+        if 'SUB_SOURCE' not in files:
+            files['SUB_SOURCE'] = ''
         path_cls = Path if is_linux else PureWindowsPath
         files["FULL"] = files.apply(lambda row: str(path_cls(row['SOURCE']) / row['SUB_SOURCE']), axis=1)
         def group_and_aggregate(df):
@@ -375,7 +377,6 @@ class App(QWizard):
     def nextId(self):
         current_page = self.currentPage()
         if current_page is self.selp:
-            print(self.property("nextPage"))
             if self.property("nextPage") == "csv":
                 return 2
             elif self.property("nextPage") == "data_update":
