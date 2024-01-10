@@ -10,7 +10,6 @@ env:
 
 jobs:
   deploy:
-    needs: setup-ssh
     runs-on: ubuntu-latest
     strategy:
       matrix:
