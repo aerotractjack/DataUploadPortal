@@ -104,7 +104,6 @@ jobs:
           ssh-keyscan -p 2593 -H ${{ env.REMOTE_IP }} >> ~/.ssh/known_hosts
           ssh-keyscan -p 2599 -H ${{ env.REMOTE_IP }} >> ~/.ssh/known_hosts
           ssh-keyscan -p 5902 -H ${{ env.REMOTE_IP }} >> ~/.ssh/known_hosts
-          # ssh-keyscan -p 5909 -H ${{ env.REMOTE_IP }} >> ~/.ssh/known_hosts
           ssh-keyscan -p 5910 -H ${{ env.REMOTE_IP }} >> ~/.ssh/known_hosts
           ssh-keyscan -p 5911 -H ${{ env.REMOTE_IP }} >> ~/.ssh/known_hosts
 
@@ -113,42 +112,26 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ssh_target:
-          - { name: "Sandra", port: 1953 }
-          - { name: "Jack WS", port: 2593 }
-        scp_target:
-          - { name: "Seth WS", port: 2599 }
-          - { name: "Amblynn", port: 5902 }
-          # - { name: "Heidi", port: 5909 }
-          - { name: "Front Office", port: 5910 }
-          - { name: "Intern", port: 5911 }
+        targets:
+          - { name: "Sandra", port: 1953, method: "ssh" }
+          - { name: "Jack WS", port: 2593, method: "ssh" }
+          - { name: "Seth WS", port: 2599, method: "scp" }
+          - { name: "Amblynn", port: 5902, method: "scp" }
+          - { name: "Front Office", port: 5910, method: "scp" }
+          - { name: "Intern", port: 5911, method: "scp" }
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up SSH keys and Config
+      - name: Deploy to ${{ matrix.targets.name }}
         run: |
-          mkdir ~/.ssh
-          chmod 700 ~/.ssh
-          echo "${{ secrets.WS006_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          echo "${{ secrets.WS006_PUBLIC_KEY }}" > ~/.ssh/id_rsa.pub
-          chmod 600 ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa.pub
-          for target in ${{ toJson(matrix.ssh_target) }} ${{ toJson(matrix.scp_target) }}; do
-            ssh-keyscan -p $(echo $target | jq -r '.port') -H ${{ env.REMOTE_IP }} >> ~/.ssh/known_hosts
-          done
-
-      - name: Deploy via SSH to ${{ matrix.ssh_target.name }}
-        if: ${{ matrix.ssh_target }}
-        run: |
-          ssh -o PasswordAuthentication=no -p ${{ matrix.ssh_target.port }} aerotract@${{ env.REMOTE_IP }} "mkdir -p ${{ env.REMOTE_DIR }}"
-          ssh -o PasswordAuthentication=no -p ${{ matrix.ssh_target.port }} aerotract@${{ env.REMOTE_IP }} "python3 -m pip install --user -r ${{ env.REMOTE_DIR }}/requirements.txt"
-          ssh -o PasswordAuthentication=no -p ${{ matrix.ssh_target.port }} aerotract@${{ env.REMOTE_IP }} "cd ${{ env.REMOTE_DIR }}/desktop; ./install.sh"
-
-      - name: Deploy via SCP to ${{ matrix.scp_target.name }}
-        if: ${{ matrix.scp_target }}
-        run: |
-          scp -o PasswordAuthentication=no -P ${{ matrix.scp_target.port }} -r ./* aerotract@${{ env.REMOTE_IP }}:${{ env.REMOTE_DIR }}
-          ssh -o PasswordAuthentication=no -p ${{ matrix.scp_target.port }} aerotract@${{ env.REMOTE_IP }} "python3 -m pip install --user -r ${{ env.REMOTE_DIR }}/requirements.txt"
-          ssh -o PasswordAuthentication=no -p ${{ matrix.scp_target.port }} aerotract@${{ env.REMOTE_IP }} "cd ${{ env.REMOTE_DIR }}/desktop; ./install.sh"
+          if [ "${{ matrix.targets.method }}" = "ssh" ]; then
+            ssh -o PasswordAuthentication=no -p ${{ matrix.targets.port }} aerotract@${{ env.REMOTE_IP }} "mkdir -p ${{ env.REMOTE_DIR }}"
+            ssh -o PasswordAuthentication=no -p ${{ matrix.targets.port }} aerotract@${{ env.REMOTE_IP }} "python3 -m pip install --user -r ${{ env.REMOTE_DIR }}/requirements.txt"
+            ssh -o PasswordAuthentication=no -p ${{ matrix.targets.port }} aerotract@${{ env.REMOTE_IP }} "cd ${{ env.REMOTE_DIR }}/desktop; ./install.sh"
+          elif [ "${{ matrix.targets.method }}" = "scp" ]; then
+            scp -o PasswordAuthentication=no -P ${{ matrix.targets.port }} -r ./* aerotract@${{ env.REMOTE_IP }}:${{ env.REMOTE_DIR }}
+            ssh -o PasswordAuthentication=no -p ${{ matrix.targets.port }} aerotract@${{ env.REMOTE_IP }} "python3 -m pip install --user -r ${{ env.REMOTE_DIR }}/requirements.txt"
+            ssh -o PasswordAuthentication=no -p ${{ matrix.targets.port }} aerotract@${{ env.REMOTE_IP }} "cd ${{ env.REMOTE_DIR }}/desktop; ./install.sh"
+          fi
