@@ -1,18 +1,110 @@
-name: Deploy DataUploadPortal to Jack WS, WS003, WS004 from WS006
+# name: Deploy DataUploadPortal to Jack WS, WS003, WS004 from WS006
+# on:
+#   push:
+#     branches:
+#       - main
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v2
+
+#       - name: Set up SSH keys
+#         run: |
+#           mkdir ~/.ssh
+#           chmod 700 ~/.ssh
+#           echo "${{ secrets.WS006_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+#           echo "${{ secrets.WS006_PUBLIC_KEY }}" > ~/.ssh/id_rsa.pub
+#           chmod 600 ~/.ssh/id_rsa
+#           chmod 600 ~/.ssh/id_rsa.pub
+#           ssh-keyscan -p 1953 -H 67.210.192.18 >> ~/.ssh/known_hosts # sandra
+#           ssh-keyscan -p 2593 -H 67.210.192.18 >> ~/.ssh/known_hosts # jack
+#           ssh-keyscan -p 2599 -H 67.210.192.18 >> ~/.ssh/known_hosts # seth
+#           ssh-keyscan -p 5902 -H 67.210.192.18 >> ~/.ssh/known_hosts # amblynn
+#           ssh-keyscan -p 5909 -H 67.210.192.18 >> ~/.ssh/known_hosts # heidi
+#           ssh-keyscan -p 5910 -H 67.210.192.18 >> ~/.ssh/known_hosts # front office
+#           ssh-keyscan -p 5911 -H 67.210.192.18 >> ~/.ssh/known_hosts # intern
+
+#       - name: Deploy to Sandra
+#         run: |
+#           ssh -o PasswordAuthentication=no -p 1953 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
+#           ssh -o PasswordAuthentication=no -p 1953 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal; git pull"
+#           ssh -o PasswordAuthentication=no -p 1953 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal/desktop; ./install.sh"
+
+#       - name: Deploy to Jack WS
+#         run: |
+#           ssh -o PasswordAuthentication=no -p 2593 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
+#           ssh -o PasswordAuthentication=no -p 2593 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal; git pull"
+#           ssh -o PasswordAuthentication=no -p 2593 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal/desktop; ./install.sh"
+
+#       - name: Deploy to Seth WS
+#         run: |
+#           ssh -o PasswordAuthentication=no -p 2599 aerotract@67.210.192.18 "mkdir -p /home/aerotract/software/DataUploadPortal"
+#           scp -o PasswordAuthentication=no -P 2599 -r ./* aerotract@67.210.192.18:/home/aerotract/software/DataUploadPortal
+#           ssh -o PasswordAuthentication=no -p 2599 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
+#           ssh -o PasswordAuthentication=no -p 2599 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal/desktop; ./install.sh"
+
+#       - name: Deploy to Amblynn 
+#         run: |
+#           ssh -o PasswordAuthentication=no -p 5902 aerotract@67.210.192.18 "mkdir -p /home/aerotract/software/DataUploadPortal"
+#           scp -o PasswordAuthentication=no -P 5902 -r ./* aerotract@67.210.192.18:/home/aerotract/software/DataUploadPortal
+#           ssh -o PasswordAuthentication=no -p 5902 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
+#           ssh -o PasswordAuthentication=no -p 5902 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal/desktop; ./install.sh"
+
+#       - name: Deploy to Heidi 
+#         run: |
+#           ssh -o PasswordAuthentication=no -p 5909 aerotract@67.210.192.18 "mkdir -p /home/aerotract/software/DataUploadPortal"
+#           scp -o PasswordAuthentication=no -P 5909 -r ./* aerotract@67.210.192.18:/home/aerotract/software/DataUploadPortal
+#           ssh -o PasswordAuthentication=no -p 5909 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
+#           ssh -o PasswordAuthentication=no -p 5909 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal/desktop; ./install.sh"
+
+#       - name: Deploy to Front Office 
+#         run: |
+#           ssh -o PasswordAuthentication=no -p 5910 aerotract@67.210.192.18 "mkdir -p /home/aerotract/software/DataUploadPortal"
+#           scp -o PasswordAuthentication=no -P 5910 -r ./* aerotract@67.210.192.18:/home/aerotract/software/DataUploadPortal
+#           ssh -o PasswordAuthentication=no -p 5910 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
+#           ssh -o PasswordAuthentication=no -p 5910 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal/desktop; ./install.sh"
+    
+#       - name: Deploy to Intern 
+#         run: |
+#           ssh -o PasswordAuthentication=no -p 5911 aerotract@67.210.192.18 "mkdir -p /home/aerotract/software/DataUploadPortal"
+#           scp -o PasswordAuthentication=no -P 5911 -r ./* aerotract@67.210.192.18:/home/aerotract/software/DataUploadPortal
+#           ssh -o PasswordAuthentication=no -p 5911 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
+#           ssh -o PasswordAuthentication=no -p 5911 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal/desktop; ./install.sh"
+
+name: Deploy DataUploadPortal to Workstations
 on:
   push:
     branches:
       - main
 
+env:
+  REMOTE_IP: 67.210.192.18
+  REMOTE_DIR: /home/aerotract/software/DataUploadPortal
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        ssh_target:
+          - { name: "Sandra", port: 1953 }
+          - { name: "Jack WS", port: 2593 }
+        scp_target:
+          - { name: "Seth WS", port: 2599 }
+          - { name: "Amblynn", port: 5902 }
+          - { name: "Heidi", port: 5909 }
+          - { name: "Front Office", port: 5910 }
+          - { name: "Intern", port: 5911 }
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up SSH keys
+      - name: Set up SSH keys and Config
         run: |
           mkdir ~/.ssh
           chmod 700 ~/.ssh
@@ -20,58 +112,20 @@ jobs:
           echo "${{ secrets.WS006_PUBLIC_KEY }}" > ~/.ssh/id_rsa.pub
           chmod 600 ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa.pub
-          ssh-keyscan -p 1953 -H 67.210.192.18 >> ~/.ssh/known_hosts # sandra
-          ssh-keyscan -p 2593 -H 67.210.192.18 >> ~/.ssh/known_hosts # jack
-          ssh-keyscan -p 2599 -H 67.210.192.18 >> ~/.ssh/known_hosts # seth
-          ssh-keyscan -p 5902 -H 67.210.192.18 >> ~/.ssh/known_hosts # amblynn
-          ssh-keyscan -p 5909 -H 67.210.192.18 >> ~/.ssh/known_hosts # heidi
-          ssh-keyscan -p 5910 -H 67.210.192.18 >> ~/.ssh/known_hosts # front office
-          ssh-keyscan -p 5911 -H 67.210.192.18 >> ~/.ssh/known_hosts # intern
+          for target in ${{ toJson(matrix.ssh_target) }} ${{ toJson(matrix.scp_target) }}; do
+            ssh-keyscan -p $(echo $target | jq -r '.port') -H ${{ env.REMOTE_IP }} >> ~/.ssh/known_hosts
+          done
 
-      - name: Deploy to Sandra
+      - name: Deploy via SSH to ${{ matrix.ssh_target.name }}
+        if: ${{ matrix.ssh_target }}
         run: |
-          ssh -o PasswordAuthentication=no -p 1953 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
-          ssh -o PasswordAuthentication=no -p 1953 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal; git pull"
-          ssh -o PasswordAuthentication=no -p 1953 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal/desktop; ./install.sh"
+          ssh -o PasswordAuthentication=no -p ${{ matrix.ssh_target.port }} aerotract@${{ env.REMOTE_IP }} "mkdir -p ${{ env.REMOTE_DIR }}"
+          ssh -o PasswordAuthentication=no -p ${{ matrix.ssh_target.port }} aerotract@${{ env.REMOTE_IP }} "python3 -m pip install --user -r ${{ env.REMOTE_DIR }}/requirements.txt"
+          ssh -o PasswordAuthentication=no -p ${{ matrix.ssh_target.port }} aerotract@${{ env.REMOTE_IP }} "cd ${{ env.REMOTE_DIR }}/desktop; ./install.sh"
 
-      - name: Deploy to Jack WS
+      - name: Deploy via SCP to ${{ matrix.scp_target.name }}
+        if: ${{ matrix.scp_target }}
         run: |
-          ssh -o PasswordAuthentication=no -p 2593 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
-          ssh -o PasswordAuthentication=no -p 2593 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal; git pull"
-          ssh -o PasswordAuthentication=no -p 2593 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal/desktop; ./install.sh"
-
-      - name: Deploy to Seth WS
-        run: |
-          ssh -o PasswordAuthentication=no -p 2599 aerotract@67.210.192.18 "mkdir -p /home/aerotract/software/DataUploadPortal"
-          scp -o PasswordAuthentication=no -P 2599 -r ./* aerotract@67.210.192.18:/home/aerotract/software/DataUploadPortal
-          ssh -o PasswordAuthentication=no -p 2599 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
-          ssh -o PasswordAuthentication=no -p 2599 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal/desktop; ./install.sh"
-
-      - name: Deploy to Amblynn 
-        run: |
-          ssh -o PasswordAuthentication=no -p 5902 aerotract@67.210.192.18 "mkdir -p /home/aerotract/software/DataUploadPortal"
-          scp -o PasswordAuthentication=no -P 5902 -r ./* aerotract@67.210.192.18:/home/aerotract/software/DataUploadPortal
-          ssh -o PasswordAuthentication=no -p 5902 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
-          ssh -o PasswordAuthentication=no -p 5902 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal/desktop; ./install.sh"
-
-      - name: Deploy to Heidi 
-        run: |
-          ssh -o PasswordAuthentication=no -p 5909 aerotract@67.210.192.18 "mkdir -p /home/aerotract/software/DataUploadPortal"
-          scp -o PasswordAuthentication=no -P 5909 -r ./* aerotract@67.210.192.18:/home/aerotract/software/DataUploadPortal
-          ssh -o PasswordAuthentication=no -p 5909 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
-          ssh -o PasswordAuthentication=no -p 5909 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal/desktop; ./install.sh"
-
-      - name: Deploy to Front Office 
-        run: |
-          ssh -o PasswordAuthentication=no -p 5910 aerotract@67.210.192.18 "mkdir -p /home/aerotract/software/DataUploadPortal"
-          scp -o PasswordAuthentication=no -P 5910 -r ./* aerotract@67.210.192.18:/home/aerotract/software/DataUploadPortal
-          ssh -o PasswordAuthentication=no -p 5910 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
-          ssh -o PasswordAuthentication=no -p 5910 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal/desktop; ./install.sh"
-    
-      - name: Deploy to Intern 
-        run: |
-          ssh -o PasswordAuthentication=no -p 5911 aerotract@67.210.192.18 "mkdir -p /home/aerotract/software/DataUploadPortal"
-          scp -o PasswordAuthentication=no -P 5911 -r ./* aerotract@67.210.192.18:/home/aerotract/software/DataUploadPortal
-          ssh -o PasswordAuthentication=no -p 5911 aerotract@67.210.192.18 "python3 -m pip install --user -r /home/aerotract/software/DataUploadPortal/requirements.txt"
-          ssh -o PasswordAuthentication=no -p 5911 aerotract@67.210.192.18 "cd /home/aerotract/software/DataUploadPortal/desktop; ./install.sh"
-      
+          scp -o PasswordAuthentication=no -P ${{ matrix.scp_target.port }} -r ./* aerotract@${{ env.REMOTE_IP }}:${{ env.REMOTE_DIR }}
+          ssh -o PasswordAuthentication=no -p ${{ matrix.scp_target.port }} aerotract@${{ env.REMOTE_IP }} "python3 -m pip install --user -r ${{ env.REMOTE_DIR }}/requirements.txt"
+          ssh -o PasswordAuthentication=no -p ${{ matrix.scp_target.port }} aerotract@${{ env.REMOTE_IP }} "cd ${{ env.REMOTE_DIR }}/desktop; ./install.sh"
