@@ -295,7 +295,7 @@ class FileSelectionPage(QWizardPage):
             self.stand_file_layouts.addLayout(stand_layout)
         for stand in stands:
             populate_file_dropdowns(stand)
-        if filetype == "project_shapefile":
+        if "project_shapefile" in filetype:
             populate_file_dropdowns("PRJSHP")
 
     def select_file_for_stand(self, filetype, stand):
