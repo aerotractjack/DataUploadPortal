@@ -325,7 +325,7 @@ class FileSelectionPage(QWizardPage):
         project_id = project.split(":")[0]
         entries = []
         print(client_id, project_id)
-        if filetype == "project_shapefile":
+        if "project_shapefile" in filetype:
             entry = {
                 "filetype": filetype,
                 "CLIENT_ID": client_id, 
