@@ -284,7 +284,7 @@ class FileSelectionPage(QWizardPage):
         self.filetype_label.setText(f"Filetype: {filetype}")
         self.client_label.setText(f"Client: {client}")
         self.project_label.setText(f"Project: {project}")
-        for stand in stands:
+        def populate_file_dropdowns(stand):
             stand_layout = QHBoxLayout()
             stand_label = QLabel(stand, self)
             self.stand_labels[stand] = stand_label
@@ -293,6 +293,10 @@ class FileSelectionPage(QWizardPage):
             stand_layout.addWidget(stand_label)
             stand_layout.addWidget(select_file_btn)
             self.stand_file_layouts.addLayout(stand_layout)
+        for stand in stands:
+            populate_file_dropdowns(stand)
+        if filetype == "project_shapefile":
+            populate_file_dropdowns("PRJSHP")
 
     def select_file_for_stand(self, filetype, stand):
         file_or_folder = self.filetypes[filetype]["type"]
@@ -315,10 +319,22 @@ class FileSelectionPage(QWizardPage):
 
     def get_entries(self):
         selections, files = self.get_selections(), self.selected_files
+        print(selections, files)
         filetype, client, project, stands = selections
         client_id = client.split(":")[0]
         project_id = project.split(":")[0]
         entries = []
+        print(client_id, project_id)
+        if filetype == "project_shapefile":
+            entry = {
+                "filetype": filetype,
+                "CLIENT_ID": client_id, 
+                "PROJECT_ID": project_id,
+                "names": [filetype],
+                "files": [files['PRJSHP']],
+                "type": [self.filetypes[filetype]["type"]] * len(files['PRJSHP'])
+            }
+            entries.append(entry)
         for stand in stands:
             stand_id = stand.split(":")[0]
             stand_p_id = stand.split(",")[-1].strip()
@@ -351,7 +367,7 @@ class FileVerificationPage(QWizardPage):
         entries = self.wizard().file_select_page.get_entries()
         entries.extend(self.wizard().csv_page.get_entries())
         vkeys = ["CLIENT_ID", "PROJECT_ID", "STAND_ID", "filetype", "files"]
-        entries = [{k:e[k] for k in vkeys} for e in entries]
+        entries = [{k:e.get(k, None) for k in vkeys} for e in entries]
         formatted_entries = [json.dumps(e, indent=4) for e in entries]
         self.list_widget.clear()
         self.list_widget.addItems(formatted_entries)
@@ -394,11 +410,7 @@ class App(QWizard):
     def on_submit(self):
         if self.result() != 1:
             dup_logger.error("CANCELLING SUBMISSION")
-            print("=========CANCELLING=========")
-            sys.stdout.flush()
             return
-        print("=========SUBMITTING=========")
-        sys.stdout.flush()
         file_entries = self.file_select_page.get_entries()
         file_entries.extend(self.csv_page.get_entries())
         for entry in file_entries:
