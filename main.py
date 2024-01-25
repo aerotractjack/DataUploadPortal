@@ -68,14 +68,23 @@ class ProjectDataSelectionPage(QWizardPage):
         """)
         layout.addWidget(self.csv_page_submission_button)
 
-        self.bulk_data_update_button = QPushButton("DATA UPDATE: Submit CSV File", self)
-        self.bulk_data_update_button.clicked.connect(self.go_to_data_update_page)
-        self.bulk_data_update_button.setStyleSheet("""
+        self.pilot_sd_button = QPushButton("DATA UPDATE: Submit CSV File", self)
+        self.pilot_sd_button.clicked.connect(self.go_to_data_update_page)
+        self.pilot_sd_button.setStyleSheet("""
             QPushButton { background-color: red; color: white; }
             QPushButton:hover { background-color: #5499C7; }
             QPushButton:pressed { background-color: #2980B9; }
         """)
-        layout.addWidget(self.bulk_data_update_button)
+        layout.addWidget(self.pilot_sd_button)
+
+        self.pilot_sd_button = QPushButton("PILOT SD UPLOAD", self)
+        self.pilot_sd_button.clicked.connect(self.go_to_sd_page)
+        self.pilot_sd_button.setStyleSheet("""
+            QPushButton { background-color: red; color: white; }
+            QPushButton:hover { background-color: #5499C7; }
+            QPushButton:pressed { background-color: #2980B9; }
+        """)
+        layout.addWidget(self.pilot_sd_button)
 
         self.file_dropdown = QComboBox(self)
         self.file_dropdown.currentIndexChanged.connect(self.populate_client_dropdown)
@@ -106,6 +115,10 @@ class ProjectDataSelectionPage(QWizardPage):
 
     def go_to_data_update_page(self):
         self.wizard().setProperty("nextPage", "data_update")
+        self.wizard().next()
+
+    def go_to_sd_page(self):
+        self.wizard().setProperty("nextPage", "sd")
         self.wizard().next()
 
     def populate_initial_data(self):
@@ -247,6 +260,65 @@ class CSVFileSubmissionPage(QWizardPage):
             }   
             entries.append(entry)
         return entries
+    
+class SDSubmissionPage(QWizardPage):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        layout = QVBoxLayout(self)
+        instructions_label = QLabel("Please select a SD card")
+        layout.addWidget(instructions_label)
+        header_label = QLabel(self)
+        header_label.setFont(QFont("Monospace"))  # Setting font to Monospace
+        header_label.setText("FILETYPE,CLIENT_ID,PROJECT_ID,STAND_ID,SOURCE,SUB_SOURCE")
+        layout.addWidget(header_label)
+        self.file_button = QPushButton("Select SD", self)
+        self.file_button.clicked.connect(self.select_file)
+        layout.addWidget(self.file_button)
+        self.filename_label = QLabel("", self)
+        layout.addWidget(self.filename_label)
+        self.setLayout(layout)
+        self.upload = None
+        self.filetypes = integration.get_filetypes()
+
+    def initializePage(self):
+        self.setTitle("Pilot SD Upload")
+
+    def select_file(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Select SD")
+        if not file_path:
+            return
+        self.filename_label.setText(file_path.split("/")[-1])  # Only display the filename, not the entire path
+        files = pd.read_csv(file_path, index_col=False).fillna("")
+        if 'SUB_SOURCE' not in files:
+            files['SUB_SOURCE'] = ''
+        path_cls = Path if is_linux else PureWindowsPath
+        files["FULL"] = files.apply(lambda row: str(path_cls(row['SOURCE']) / row['SUB_SOURCE']), axis=1)
+        def group_and_aggregate(df):
+            grouped_df = df.groupby(['FILETYPE', 'CLIENT_ID', 'PROJECT_ID', 'STAND_ID'])['FULL'].agg(list).reset_index()
+            return grouped_df
+        self.upload = group_and_aggregate(files)
+
+    def get_entries(self):
+        if self.upload is None:
+            return []
+        entries = []
+        for i, r in self.upload.iterrows():
+            stand_p_id = integration.get_stand_pid_from_ids(
+                r["CLIENT_ID"], r["PROJECT_ID"], r["STAND_ID"]
+            )
+            filetype = r["FILETYPE"].lower()
+            entry = {
+                "filetype": filetype,
+                "CLIENT_ID": r["CLIENT_ID"], 
+                "PROJECT_ID": r["PROJECT_ID"],
+                "STAND_ID": r["STAND_ID"],
+                "STAND_PERSISTENT_ID": stand_p_id,
+                "names": [filetype],
+                "files": [r["FULL"]],
+                "type": [self.filetypes[filetype]["type"]] * len(r["FULL"])
+            }   
+            entries.append(entry)
+        return entries
                 
 class FileSelectionPage(QWizardPage):
     def __init__(self, parent=None):
@@ -319,12 +391,10 @@ class FileSelectionPage(QWizardPage):
 
     def get_entries(self):
         selections, files = self.get_selections(), self.selected_files
-        print(selections, files)
         filetype, client, project, stands = selections
         client_id = client.split(":")[0]
         project_id = project.split(":")[0]
         entries = []
-        print(client_id, project_id)
         if "project_shapefile" in filetype:
             entry = {
                 "filetype": filetype,
@@ -366,6 +436,7 @@ class FileVerificationPage(QWizardPage):
     def initializePage(self):
         entries = self.wizard().file_select_page.get_entries()
         entries.extend(self.wizard().csv_page.get_entries())
+        entries.extend(self.wizard().sd_upload_page.get_entries())
         vkeys = ["CLIENT_ID", "PROJECT_ID", "STAND_ID", "filetype", "files"]
         entries = [{k:e.get(k, None) for k in vkeys} for e in entries]
         formatted_entries = [json.dumps(e, indent=4) for e in entries]
@@ -383,9 +454,11 @@ class App(QWizard):
         self.addPage(self.csv_page)
         self.data_update_page = BulkDataUpdatePage() # 3
         self.addPage(self.data_update_page)
-        self.verify_page = FileVerificationPage() # 4
+        self.sd_upload_page = SDSubmissionPage() # 4
+        self.addPage(self.sd_upload_page)
+        self.verify_page = FileVerificationPage() # 5
         self.addPage(self.verify_page)
-        self.update_verify_page = DataVerificationPage() # 5
+        self.update_verify_page = DataVerificationPage() # 6
         self.addPage(self.update_verify_page)
         self.setWindowTitle("Data Upload Portal")
         self.finished.connect(self.on_submit)
@@ -397,14 +470,18 @@ class App(QWizard):
                 return 2
             elif self.property("nextPage") == "data_update":
                 return 3
+            elif self.property("nextPage") == "sd":
+                return 4
             else:
                 return 1
         elif current_page is self.data_update_page:
-            return 5
+            return 6
         elif current_page is self.csv_page:
-            return 4
+            return 5
+        elif current_page is self.sd_upload_page:
+            return 5
         elif current_page is self.file_select_page:
-            return 4
+            return 5
         return -1
 
     def on_submit(self):
@@ -413,6 +490,7 @@ class App(QWizard):
             return
         file_entries = self.file_select_page.get_entries()
         file_entries.extend(self.csv_page.get_entries())
+        file_entries.extend(self.sd_upload_page.get_entries())
         for entry in file_entries:
             entry_json = json.dumps(entry, indent=4)
             with lock:
