@@ -80,7 +80,7 @@ class ProjectDataSelectionPage(QWizardPage):
         self.pilot_sd_button = QPushButton("PILOT SD UPLOAD", self)
         self.pilot_sd_button.clicked.connect(self.go_to_sd_page)
         self.pilot_sd_button.setStyleSheet("""
-            QPushButton { background-color: red; color: white; }
+            QPushButton { background-color: blue; color: white; }
             QPushButton:hover { background-color: #5499C7; }
             QPushButton:pressed { background-color: #2980B9; }
         """)
