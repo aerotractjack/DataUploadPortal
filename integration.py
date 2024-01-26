@@ -46,10 +46,18 @@ def post_update(update):
     if not req.status_code == 200:
         raise ValueError("STORAGE ERROR: " + req.text)
     return True
+
+def client_id_from_project_id(project_id):
+    try:
+        url = f"{api_url}/api/get_client_id_from_project"
+        req = requests.post(url, json={"project_id": project_id})
+        return req.json()[0]["CLIENT_ID"]
+    except:
+        return  []
     
 if __name__ == "__main__":
     # print(get_filetypes())
     # print(get_clients())
     # print(get_projects(10007))
     # print(get_stands(101036))
-    print(get_stand_pid_from_ids(10009, 101005, 205))
+    print(client_id_from_project_id(101073))

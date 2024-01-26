@@ -283,12 +283,29 @@ class SDSubmissionPage(QWizardPage):
     def initializePage(self):
         self.setTitle("Pilot SD Upload")
 
+    def parse_sd_contents(self, sd_path):
+        folders = list(os.listdir(sd_path))
+        contents = []
+        for folder in folders:
+            folder_split = folder.split("_")
+            proj_id, stand_id = folder_split[:2]
+            is_strip_sample = folder_split[-1] == "SS"
+            row = {
+                "FILETYPE": "flight_images" if not is_strip_sample else "strip_sample_images",
+                "CLIENT_ID": integration.client_id_from_project_id(proj_id),
+                "PROJECT_ID": proj_id,
+                "STAND_ID": stand_id,
+                "SOURCE": os.path.abspath(folder)
+            }
+            contents.append(row)
+        return pd.DataFrame(contents)
+
     def select_file(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Select SD")
+        file_path = QFileDialog.getExistingDirectory(self, "Select SD")
         if not file_path:
             return
         self.filename_label.setText(file_path.split("/")[-1])  # Only display the filename, not the entire path
-        files = pd.read_csv(file_path, index_col=False).fillna("")
+        files = self.parse_sd_contents(file_path).fillna("")
         if 'SUB_SOURCE' not in files:
             files['SUB_SOURCE'] = ''
         path_cls = Path if is_linux else PureWindowsPath
