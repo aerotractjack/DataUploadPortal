@@ -295,7 +295,7 @@ class SDSubmissionPage(QWizardPage):
                 "CLIENT_ID": integration.client_id_from_project_id(proj_id),
                 "PROJECT_ID": proj_id,
                 "STAND_ID": stand_id,
-                "SOURCE": os.path.abspath(folder)
+                "SOURCE": os.path.join(sd_path, folder)
             }
             contents.append(row)
         return pd.DataFrame(contents)
