@@ -289,7 +289,7 @@ class SDSubmissionPage(QWizardPage):
         for folder in folders:
             folder_split = folder.split("_")
             proj_id, stand_id = folder_split[:2]
-            is_strip_sample = folder_split[-1] == "SS"
+            is_strip_sample = folder_split[-1].upper() == "SS"
             row = {
                 "FILETYPE": "flight_images" if not is_strip_sample else "strip_sample_images",
                 "CLIENT_ID": integration.client_id_from_project_id(proj_id),
