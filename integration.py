@@ -54,10 +54,3 @@ def client_id_from_project_id(project_id):
         return req.json()[0]["CLIENT_ID"]
     except:
         return  []
-    
-if __name__ == "__main__":
-    # print(get_filetypes())
-    # print(get_clients())
-    # print(get_projects(10007))
-    # print(get_stands(101036))
-    print(client_id_from_project_id(101073))
