@@ -38,7 +38,7 @@ jobs:
       - name: Deploy updates via SCP to ${{ matrix.targets.name }}
         if: matrix.targets.method == 'scp'
         run: |
-          ssh -o PasswordAuthentication=no -p ${{ matrix.targets.port }} aerotract@${{ env.REMOTE_IP }} "mkdir -p ${{ env.REMOTE_DIR }}; rm -rf ${{ env.REMOTE_DIR }}/*"
+          ssh -o PasswordAuthentication=no -p ${{ matrix.targets.port }} aerotract@${{ env.REMOTE_IP }} "mkdir -p ${{ env.REMOTE_DIR }}"
           scp -o PasswordAuthentication=no -P ${{ matrix.targets.port }} -r ./* aerotract@${{ env.REMOTE_IP }}:${{ env.REMOTE_DIR }}
 
       - name: Deploy updates via SSH to ${{ matrix.targets.name }}
