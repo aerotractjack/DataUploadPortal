@@ -26,6 +26,7 @@ dup_logger = AeroLogger(
 platform_name = platform.system()
 is_linux = platform_name == "Linux"
 
+# linux (hopefully) or windows
 if is_linux:
     load_dotenv("/home/aerotract/NAS/main/software/db_env.sh")
     sq_path = Path(os.getenv("STORAGE_QUEUE_PATH"))
