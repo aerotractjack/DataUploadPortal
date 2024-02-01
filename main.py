@@ -1,4 +1,5 @@
 import sys
+import re
 from PyQt6.QtWidgets import (QApplication, QWizard, QHBoxLayout, QVBoxLayout, 
                     QComboBox, QLabel, QPushButton, QFileDialog, QWizardPage,
                     QListWidget)
@@ -287,7 +288,10 @@ class SDSubmissionPage(QWizardPage):
     def parse_sd_contents(self, sd_path):
         folders = list(os.listdir(sd_path))
         contents = []
+        pattern = r'^\d{6}_\d{3}_'
         for folder in folders:
+            if not re.match(pattern, folder):
+                continue
             folder_split = folder.split("_")
             proj_id, stand_id = folder_split[:2]
             is_strip_sample = folder_split[-1].upper() == "SS"
