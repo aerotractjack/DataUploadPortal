@@ -21,6 +21,7 @@ jobs:
           - { name: "Heidi", port: 5909, method: "scp" }
           - { name: "Front Office", port: 5910, method: "scp" }
           - { name: "Intern", port: 5911, method: "scp" }
+          - { name: "Pilot", port: 3387, method: "scp" }
 
     steps:
       - name: Checkout code
