@@ -183,6 +183,8 @@ class BulkDataUpdatePage(QWizardPage):
         self.upload = pd.read_csv(file_path, index_col=False).fillna("")
 
     def get_entries(self):
+        if self.upload is None:
+            return {}
         return self.upload.to_dict("records")
   
 class DataVerificationPage(QWizardPage):

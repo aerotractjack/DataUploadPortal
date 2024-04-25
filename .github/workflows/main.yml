@@ -16,12 +16,12 @@ jobs:
         targets:
           - { name: "Sandra", port: 1953, method: "ssh" }
           - { name: "Jack WS", port: 2593, method: "ssh" }
-          # - { name: "Seth WS", port: 2599, method: "scp" }
-          # - { name: "Amblynn", port: 5902, method: "scp" }
-          # - { name: "Heidi", port: 5909, method: "scp" }
-          # - { name: "Front Office", port: 5910, method: "scp" }
+          - { name: "Seth WS", port: 2599, method: "scp" }
+          - { name: "Amblynn", port: 5902, method: "scp" }
+          - { name: "Heidi", port: 5909, method: "scp" }
+          - { name: "Front Office", port: 5910, method: "scp" }
           - { name: "Pilot", port: 3387, method: "scp" }
-          # - { name: "Intern", port: 5911, method: "scp" }
+          - { name: "Intern", port: 5911, method: "scp" }
 
     steps:
       - name: Checkout code
